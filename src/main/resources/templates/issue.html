@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="'Jira Manager — ' + ${issue.key()}">Jira Manager</title>
+    <link rel="stylesheet" href="/app.css"/>
+    <script src="/htmx.min.js"></script>
+</head>
+<body class="issue-body">
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content issue-layout">
+    <aside class="issue-sidebar">
+        <a class="back-to-list" th:href="@{'/board/' + ${activeSlug}}">← Full list</a>
+        <ul class="mini-list">
+            <li th:each="i : ${sidebarIssues}"
+                th:class="${i.rowClass()} + (${i.key() == issue.key()} ? ' selected' : '')">
+                <a th:href="@{'/issue/' + ${i.key()}(board=${activeSlug})}">
+                    <span class="mini-top">
+                        <span class="mini-key" th:text="${i.key()}">KEY-1</span>
+                        <span class="mini-status status" th:classappend="'sc-' + ${i.statusCategory()}"
+                              th:text="${i.status()}">Status</span>
+                    </span>
+                    <span class="mini-summary" th:text="${i.summary()}">summary</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <div class="issue-main">
+        <div th:replace="~{fragments/issue_detail :: detail}"></div>
+
+        <section class="claude-panel">
+            <h3>Claude</h3>
+            <form method="post"
+                  th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/claude'}"
+                  hx-target="#claude-runs" hx-swap="outerHTML">
+                <input type="text" name="command" class="claude-cmd"
+                       value="/developer-checklists-setup"
+                       placeholder="/skill or free-text prompt"/>
+                <button type="submit">Run on this issue</button>
+            </form>
+            <p class="muted">Runs <code>claude -p "&lt;command&gt; <span th:text="${issue.key()}">KEY-1</span>"</code>
+                server-side. Also auto-fires when an issue moves to <em>In Progress</em>.</p>
+
+            <div th:replace="~{fragments/claude_runs :: runs}"></div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

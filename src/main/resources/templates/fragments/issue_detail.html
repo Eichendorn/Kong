@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="detail" id="issue-detail" class="detail">
+
+    <div class="detail-head">
+        <!-- Resolution prompt: shown when a move to Done needs a resolution chosen. -->
+        <form th:if="${resolutionPrompt}" class="head-transition resolution-prompt" method="post"
+              th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/transition'}"
+              hx-target="#issue-detail" hx-swap="outerHTML">
+            <input type="hidden" name="transitionId" th:value="${pendingTransitionId}"/>
+            <span class="res-label"
+                  th:text="${pendingTransitionLabel} + ' — choose a resolution:'">Resolution</span>
+            <select name="resolution">
+                <option th:each="r : ${resolutions}" th:value="${r.name()}"
+                        th:text="${r.name()}">Done</option>
+            </select>
+            <button type="submit">Confirm</button>
+            <a class="res-cancel" href="#"
+               th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/detail'}"
+               hx-target="#issue-detail" hx-swap="outerHTML">Cancel</a>
+        </form>
+
+        <!-- Transition picklist, pinned to the top-right of the detail pane.
+             Hidden once the issue is Done — no status changes offered from there. -->
+        <form class="head-transition"
+              th:if="${!resolutionPrompt and !transitions.isEmpty() and issue.status() != 'Done'}" method="post"
+              th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/transition'}"
+              hx-target="#issue-detail" hx-swap="outerHTML">
+            <select name="transitionId">
+                <option th:each="t : ${transitions}" th:value="${t.id()}"
+                        th:text="${t.name()} + ' → ' + ${t.toStatus()}">move</option>
+            </select>
+            <button type="submit">Apply</button>
+        </form>
+
+        <h1>
+            <span th:text="${issue.key()}">KEY-1</span>
+            <span class="status" th:classappend="'sc-' + ${issue.statusCategory()}"
+                  th:text="${issue.status()}">Status</span>
+        </h1>
+        <h2 th:text="${issue.summary()}">summary</h2>
+        <dl class="meta">
+            <dt>Type</dt><dd th:text="${issue.issueType()}">Task</dd>
+            <dt>Assignee</dt><dd th:text="${issue.assignee()}">Assignee</dd>
+            <dt>Reporter</dt><dd th:text="${issue.reporter()}">Reporter</dd>
+            <dt>Priority</dt><dd th:text="${issue.priority()}">Priority</dd>
+            <dt>Dev Checklists</dt>
+            <dd>
+                <span th:if="${issue.checklistsComplete()}" class="badge badge-yes">Complete</span>
+                <span th:unless="${issue.checklistsComplete()}" class="badge badge-no">Incomplete</span>
+            </dd>
+        </dl>
+    </div>
+
+    <div class="field-block" th:if="${!issue.devChecklists().isEmpty()}">
+        <h3 class="field-title">Developer Checklists</h3>
+        <ul class="checklist-links">
+            <li th:each="l : ${issue.devChecklists()}">
+                <a th:href="${l.href()}" th:text="${l.text()}" target="_blank" rel="noopener">link</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="field-block editable" th:if="${issue.status() == 'Track'}">
+        <input type="checkbox" class="edit-toggle" id="edit-tracking"/>
+        <div class="field-head">
+            <h3 class="field-title">Reason for Tracking</h3>
+            <label for="edit-tracking" class="edit-btn">Edit</label>
+            <label for="edit-tracking" class="cancel-btn">Cancel</label>
+        </div>
+        <div class="field-view description"
+             th:text="${issue.reasonForTracking().isBlank()} ? '— empty —' : ${issue.reasonForTracking()}">reason</div>
+        <form class="field-edit" method="post"
+              th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/tracking'}"
+              hx-target="#issue-detail" hx-swap="outerHTML">
+            <textarea name="text" rows="4" th:text="${issue.reasonForTracking()}"></textarea>
+            <div class="edit-actions"><button type="submit">Save</button></div>
+        </form>
+    </div>
+
+    <div class="field-block editable">
+        <input type="checkbox" class="edit-toggle" id="edit-spec"/>
+        <div class="field-head">
+            <h3 class="field-title">Specification Details</h3>
+            <label for="edit-spec" class="edit-btn">Edit</label>
+            <label for="edit-spec" class="cancel-btn">Cancel</label>
+        </div>
+        <div class="field-view description"
+             th:text="${issue.specDetail().isBlank()} ? '— empty —' : ${issue.specDetail()}">specification</div>
+        <form class="field-edit" method="post"
+              th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/spec'}"
+              hx-target="#issue-detail" hx-swap="outerHTML">
+            <textarea name="text" rows="8" th:text="${issue.specDetail()}"></textarea>
+            <div class="edit-actions"><button type="submit">Save</button></div>
+        </form>
+    </div>
+
+    <div class="field-block editable">
+        <input type="checkbox" class="edit-toggle" id="edit-desc"/>
+        <div class="field-head">
+            <h3 class="field-title">Description</h3>
+            <label for="edit-desc" class="edit-btn">Edit</label>
+            <label for="edit-desc" class="cancel-btn">Cancel</label>
+        </div>
+        <div class="field-view description"
+             th:text="${issue.descriptionText().isBlank()} ? '— empty —' : ${issue.descriptionText()}">description</div>
+        <form class="field-edit" method="post"
+              th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/description'}"
+              hx-target="#issue-detail" hx-swap="outerHTML">
+            <textarea name="text" rows="8" th:text="${issue.descriptionText()}"></textarea>
+            <div class="edit-actions"><button type="submit">Save</button></div>
+        </form>
+    </div>
+
+    <section class="comments">
+        <h3>Comments</h3>
+        <form class="add-comment" method="post"
+              th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/comment'}"
+              hx-target="#issue-detail" hx-swap="outerHTML">
+            <textarea name="text" rows="3" placeholder="Comment text…"></textarea>
+            <button type="submit">Comment</button>
+        </form>
+
+        <ul class="comment-list">
+            <th:block th:each="c : ${comments}">
+                <li th:replace="~{fragments/comment :: node(${c})}"></li>
+            </th:block>
+        </ul>
+        <p th:if="${comments == null or comments.isEmpty()}" class="muted">No comments.</p>
+    </section>
+</section>
+</body>
+</html>

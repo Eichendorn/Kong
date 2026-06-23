@@ -1,0 +1,16 @@
+JIRA MANAGER — STARTUP INSTRUCTIONS
+
+1. Build and start the server (inside Claude Code):
+
+   mvn -q package && setsid java -jar target/jira-manager.jar >server.log 2>&1 </dev/null & disown
+
+2. Start the port-forwarding proxy (PowerShell on Windows host):
+
+   docker run -d --name jira-proxy --network fnba-claude-docker-dist_default -p 7070:7070 alpine/socat tcp-listen:7070,fork,reuseaddr tcp-connect:claude-code:7070
+
+3. Open in browser:
+
+   http://localhost:7070
+
+To stop the proxy:  docker rm -f jira-proxy
+To restart it:      re-run step 2

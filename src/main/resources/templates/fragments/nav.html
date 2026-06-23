@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="nav" class="topbar">
+    <a class="brand" href="/">Jira Manager</a>
+    <nav class="boards">
+        <a th:each="b : ${boards}"
+           th:href="@{'/board/' + ${b.slug()}}"
+           th:text="${b.label()}"
+           th:classappend="${b.slug()} == ${activeSlug} ? 'active' : ''">Board</a>
+    </nav>
+    <form class="search" action="/search" method="get">
+        <input type="text" name="jql" placeholder="JQL, e.g. assignee = currentUser() AND statusCategory != Done"
+               th:value="${jql}"/>
+        <button type="submit">Search</button>
+    </form>
+</header>
+</body>
+</html>
