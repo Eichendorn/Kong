@@ -91,6 +91,9 @@ public class Routes {
     private static final Set<String> ALLOWED_ISSUE_TYPES = Set.of(
             "Encompass", "Encompass Bug", "Refactor", "Encompass Investigation");
 
+    /** Target statuses that prompt for a resolution when transitioned into. */
+    private static final Set<String> RESOLVING_STATUSES = Set.of("Done", "Canceled");
+
     /** Boilerplate the Specification Details field is primed with on the create screen. */
     private static final String SPEC_TEMPLATE = """
             **What is the problem?**
@@ -278,13 +281,19 @@ public class Routes {
                 .findFirst().orElse(null);
         String toStatus = target == null ? null : target.toStatus();
 
-        // Moving to Done requires a resolution. If one hasn't been chosen yet,
-        // re-render the detail pane with a resolution picklist instead of
-        // performing the transition; the Confirm button re-posts with it set.
-        boolean needsResolution = "Done".equalsIgnoreCase(toStatus)
+        // Moving to a resolving status (Done/Canceled) requires a resolution. If
+        // one hasn't been chosen yet, re-render the detail pane with a resolution
+        // picklist instead of transitioning; Confirm re-posts with it set.
+        boolean needsResolution = toStatus != null
+                && RESOLVING_STATUSES.stream().anyMatch(s -> s.equalsIgnoreCase(toStatus))
                 && (resolution == null || resolution.isBlank());
         if (needsResolution) {
             List<Resolution> options = jira.resolutionOptions(key, transitionId);
+            // "Done" is not a meaningful resolution for a cancellation.
+            if ("Canceled".equalsIgnoreCase(toStatus)) {
+                options = options.stream()
+                        .filter(o -> !"Done".equalsIgnoreCase(o.name())).toList();
+            }
             if (!options.isEmpty()) {
                 Map<String, Object> model = detailModel(key);
                 model.put("resolutionPrompt", Boolean.TRUE);
