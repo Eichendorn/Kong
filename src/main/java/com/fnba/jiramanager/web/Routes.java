@@ -99,8 +99,30 @@ public class Routes {
         renderList(ctx, board.label(), board.jql(), slug);
     }
 
-    /** A Kanban column: its label, the category to colour it by, and its cards. */
-    public record Column(String status, String statusCategory, List<Issue> issues) {}
+    /** A Kanban column: its label, colour category, and its status sub-groups. */
+    public record Column(String status, String statusCategory, List<StatusGroup> groups) {
+        public int cardCount() {
+            return groups.stream().mapToInt(g -> g.issues().size()).sum();
+        }
+    }
+
+    /** Cards sharing one status within a column, oldest-in-status first. */
+    public record StatusGroup(String status, String statusCategory, List<Issue> issues) {}
+
+    /** Oldest first: earliest entry into the current status category sinks to the top. */
+    private static final Comparator<Issue> BY_AGE_OLDEST_FIRST =
+            Comparator.comparing(Issue::statusSince, Comparator.nullsLast(Comparator.naturalOrder()));
+
+    /** Split a column's cards into status groups (workflow order), each aged oldest-first. */
+    private static List<StatusGroup> statusGroups(List<Issue> issues) {
+        Map<String, List<Issue>> byStatus = new HashMap<>();
+        for (Issue i : issues) byStatus.computeIfAbsent(i.status(), k -> new ArrayList<>()).add(i);
+        return byStatus.values().stream()
+                .sorted(Comparator.comparingInt(g -> g.get(0).statusRank()))
+                .map(g -> new StatusGroup(g.get(0).status(), g.get(0).statusCategory(),
+                        g.stream().sorted(BY_AGE_OLDEST_FIRST).toList()))
+                .toList();
+    }
 
     /** Active statuses treated as backlog on the Kanban (hidden there). */
     private static final Set<String> KANBAN_EXCLUDE = Set.of("Needs Spec Revision");
@@ -146,10 +168,7 @@ public class Routes {
         }
         List<Column> columns = byCol.entrySet().stream()
                 .sorted(Comparator.comparingInt(e -> colRank.get(e.getKey())))
-                .map(e -> new Column(e.getKey(), colCat.get(e.getKey()),
-                        e.getValue().stream()
-                                .sorted(Comparator.comparing(Issue::updated).reversed())
-                                .toList()))
+                .map(e -> new Column(e.getKey(), colCat.get(e.getKey()), statusGroups(e.getValue())))
                 .toList();
         model.put("columns", columns);
         ctx.render("kanban.html", model);
