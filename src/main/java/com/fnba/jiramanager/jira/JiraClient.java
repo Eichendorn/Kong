@@ -34,6 +34,8 @@ public class JiraClient {
 
     /** Story Points custom field on fnba.atlassian.net (see project memory). */
     public static final String STORY_POINTS_FIELD = "customfield_10016";
+    /** Compliance/Regulatory Attribute — a single-option (radio) custom field. */
+    public static final String COMPLIANCE_FIELD = "customfield_11667";
 
     public JiraClient(Config cfg) {
         this.baseUrl = cfg.jiraBaseUrl().replaceAll("/+$", "");
@@ -101,6 +103,26 @@ public class JiraClient {
         return out;
     }
 
+    /** The authenticated user (used to default the Reporter on new issues). */
+    public JiraUser currentUser() {
+        JsonNode u = get(baseUrl + "/rest/api/3/myself");
+        return new JiraUser(u.path("accountId").asText(""), u.path("displayName").asText(""));
+    }
+
+    /** Active users assignable in a project — a practical Reporter picklist. */
+    public List<JiraUser> assignableUsers(String projectKey) {
+        JsonNode arr = get(baseUrl + "/rest/api/3/user/assignable/search"
+                + "?maxResults=200&project=" + enc(projectKey));
+        List<JiraUser> out = new ArrayList<>();
+        for (JsonNode u : arr) {
+            if (!u.path("active").asBoolean(true)) continue;
+            String id = u.path("accountId").asText("");
+            if (!id.isEmpty()) out.add(new JiraUser(id, u.path("displayName").asText("")));
+        }
+        out.sort(Comparator.comparing(JiraUser::displayName, String.CASE_INSENSITIVE_ORDER));
+        return out;
+    }
+
     /** Fetch a single issue with all fields. */
     public Issue getIssue(String key) {
         JsonNode node = get(baseUrl + "/rest/api/3/issue/" + enc(key));
@@ -129,6 +151,29 @@ public class JiraClient {
         roots.sort(byCreated.reversed());
         for (Comment c : all) c.replies().sort(byCreated);
         return roots;
+    }
+
+    /**
+     * Projects the current user can create issues in, each with its allowed
+     * (non-subtask) issue types. Restricted to {@code projectKeys} when given.
+     */
+    public List<CreateProject> createMeta(List<String> projectKeys) {
+        String url = baseUrl + "/rest/api/3/issue/createmeta?expand=projects.issuetypes";
+        if (projectKeys != null && !projectKeys.isEmpty()) {
+            url += "&projectKeys=" + enc(String.join(",", projectKeys));
+        }
+        JsonNode root = get(url);
+        List<CreateProject> out = new ArrayList<>();
+        for (JsonNode p : root.path("projects")) {
+            List<CreateProject.CreateIssueType> types = new ArrayList<>();
+            for (JsonNode t : p.path("issuetypes")) {
+                if (t.path("subtask").asBoolean(false)) continue;
+                types.add(new CreateProject.CreateIssueType(
+                        t.path("id").asText(), t.path("name").asText()));
+            }
+            out.add(new CreateProject(p.path("key").asText(), p.path("name").asText(), types));
+        }
+        return out;
     }
 
     /** The workflow transitions currently available on an issue. */
@@ -174,6 +219,32 @@ public class JiraClient {
     }
 
     // ---- Writes ------------------------------------------------------------
+
+    /**
+     * Create an issue and return its new key. Only {@code projectKey},
+     * {@code issueTypeId} and {@code summary} are required; every other argument
+     * is sent only when non-blank, so an unset field is simply omitted.
+     */
+    public String createIssue(String projectKey, String issueTypeId, String summary,
+                              String description, String reporterAccountId,
+                              String specDetail, String complianceValue) {
+        ObjectNode fields = mapper.createObjectNode();
+        fields.putObject("project").put("key", projectKey);
+        fields.putObject("issuetype").put("id", issueTypeId);
+        fields.put("summary", summary);
+        if (notBlank(description)) fields.set("description", adf(description));
+        if (notBlank(reporterAccountId)) fields.putObject("reporter").put("id", reporterAccountId.trim());
+        if (notBlank(specDetail)) fields.set(Issue.SPEC_DETAIL_FIELD, adf(specDetail));
+        if (notBlank(complianceValue)) fields.putObject(COMPLIANCE_FIELD).put("value", complianceValue.trim());
+        ObjectNode body = mapper.createObjectNode();
+        body.set("fields", fields);
+        JsonNode resp = post(baseUrl + "/rest/api/3/issue", body);
+        return resp.path("key").asText("");
+    }
+
+    private static boolean notBlank(String s) {
+        return s != null && !s.isBlank();
+    }
 
     /** Execute a workflow transition by id, without changing the resolution. */
     public void transition(String key, String transitionId) {

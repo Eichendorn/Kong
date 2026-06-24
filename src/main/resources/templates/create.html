@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Jira Manager — Create Task</title>
+    <link rel="stylesheet" href="/app.css"/>
+    <script src="/htmx.min.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content">
+    <div th:if="${!jiraReady}" class="banner">
+        No Jira credentials configured — issues can't be created. Add your API token to
+        <code>config.local.properties</code> and restart.
+    </div>
+
+    <h1>Create Task</h1>
+
+    <p th:if="${jiraReady and projects.isEmpty()}" class="empty">
+        No projects available to create issues in.
+    </p>
+
+    <form th:if="${!projects.isEmpty()}" class="create-form" method="post" action="/create">
+        <label class="field">
+            <span class="field-label">Project</span>
+            <select id="project" name="project" required onchange="syncFields()">
+                <option th:each="p : ${projects}" th:value="${p.key()}"
+                        th:text="${p.key()} + ' — ' + ${p.name()}"
+                        th:selected="${p.key() == defaultProjectKey}">PROJ</option>
+            </select>
+        </label>
+
+        <label class="field">
+            <span class="field-label">Issue Type</span>
+            <select id="issuetype" name="issuetype" required>
+                <th:block th:each="p : ${projects}">
+                    <option th:each="t : ${p.issueTypes()}"
+                            th:value="${t.id()}" th:text="${t.name()}"
+                            th:attr="data-project=${p.key()}">Type</option>
+                </th:block>
+            </select>
+        </label>
+
+        <label class="field">
+            <span class="field-label">Summary</span>
+            <input type="text" name="summary" required maxlength="255"
+                   placeholder="Short, specific title"/>
+        </label>
+
+        <label class="field">
+            <span class="field-label">Reporter</span>
+            <select id="reporter" name="reporter">
+                <th:block th:each="p : ${projects}">
+                    <option th:each="u : ${reportersByProject.get(p.key())}"
+                            th:value="${u.accountId()}" th:text="${u.displayName()}"
+                            th:attr="data-project=${p.key()},data-current=${u.accountId() == currentUserAccountId}">User</option>
+                </th:block>
+            </select>
+        </label>
+
+        <label class="field">
+            <span class="field-label">Description</span>
+            <textarea name="description" rows="8" placeholder="Optional details…"></textarea>
+        </label>
+
+        <label class="field">
+            <span class="field-label">Specification Details</span>
+            <textarea name="specDetail" rows="6" placeholder="Optional…"></textarea>
+        </label>
+
+        <label class="field">
+            <span class="field-label">Compliance/Regulatory Attribute</span>
+            <select name="compliance">
+                <option value="">— none —</option>
+                <option th:each="c : ${complianceOptions}" th:value="${c}" th:text="${c}">Yes</option>
+            </select>
+        </label>
+
+        <div class="create-actions">
+            <button type="submit">Create Task</button>
+            <a class="btn-secondary" th:href="${backHref}">Cancel</a>
+        </div>
+    </form>
+</main>
+
+<script>
+    // Issue-type and Reporter options for every project are rendered up front,
+    // each tagged with data-project; show only those for the selected project and
+    // keep a valid one selected. For Reporter, prefer the current user.
+    function filterByProject(selectId, proj, preferCurrent) {
+        var sel = document.getElementById(selectId);
+        if (!sel) return;
+        var firstVisible = null, current = null;
+        for (var i = 0; i < sel.options.length; i++) {
+            var opt = sel.options[i];
+            var match = opt.getAttribute('data-project') === proj;
+            opt.hidden = !match;
+            opt.disabled = !match;
+            if (match) {
+                if (firstVisible === null) firstVisible = opt;
+                if (preferCurrent && opt.getAttribute('data-current') === 'true') current = opt;
+            }
+        }
+        var pick = current || firstVisible;
+        if (pick && (sel.selectedIndex < 0 || sel.options[sel.selectedIndex].hidden)) {
+            pick.selected = true;
+        }
+    }
+    function syncFields() {
+        var proj = document.getElementById('project').value;
+        filterByProject('issuetype', proj, false);
+        filterByProject('reporter', proj, true);
+    }
+    document.addEventListener('DOMContentLoaded', syncFields);
+</script>
+</body>
+</html>

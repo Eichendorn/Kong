@@ -3,17 +3,24 @@ package com.fnba.jiramanager.web;
 import com.fnba.jiramanager.claude.ClaudeService;
 import com.fnba.jiramanager.config.BoardDef;
 import com.fnba.jiramanager.config.Config;
+import com.fnba.jiramanager.jira.CreateProject;
 import com.fnba.jiramanager.jira.Issue;
 import com.fnba.jiramanager.jira.JiraClient;
+import com.fnba.jiramanager.jira.JiraUser;
 import com.fnba.jiramanager.jira.Resolution;
 import com.fnba.jiramanager.jira.Transition;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * All HTTP routes. Navigation routes render full pages; action routes (POSTs)
@@ -41,6 +48,8 @@ public class Routes {
 
         app.get("/board/{slug}", this::board);
         app.get("/search", this::search);
+        app.get("/create", this::showCreate);
+        app.post("/create", this::doCreate);
         app.get("/issue/{key}", this::issue);
         app.get("/issue/{key}/detail", this::detailFragment);
 
@@ -76,6 +85,98 @@ public class Routes {
         String jql = ctx.queryParamAsClass("jql", String.class)
                 .getOrDefault("ORDER BY updated DESC");
         renderList(ctx, "Search", jql, null);
+    }
+
+    /** The only issue types offered when creating a new task. */
+    private static final Set<String> ALLOWED_ISSUE_TYPES = Set.of(
+            "Encompass", "Encompass Bug", "Refactor", "Encompass Investigation");
+
+    /** Render the task-creation screen, pre-selecting the active board's project. */
+    private void showCreate(Context ctx) {
+        Map<String, Object> model = baseModel(null);
+        model.put("title", "Create Task");
+        List<CreateProject> projects = jiraReady()
+                ? jira.createMeta(configuredProjectKeys()) : List.<CreateProject>of();
+        // Restrict to the allowed issue types; drop any project left with none.
+        projects = projects.stream()
+                .map(p -> new CreateProject(p.key(), p.name(), p.issueTypes().stream()
+                        .filter(t -> ALLOWED_ISSUE_TYPES.contains(t.name())).toList()))
+                .filter(p -> !p.issueTypes().isEmpty())
+                .toList();
+        model.put("projects", projects);
+        model.put("defaultProjectKey", defaultProjectKey(ctx.queryParam("board"), projects));
+
+        // Reporter picklist (per project) defaulting to the current user, plus the
+        // Compliance/Regulatory options. Only fetched when Jira is reachable.
+        JiraUser me = jiraReady() ? jira.currentUser() : null;
+        Map<String, List<JiraUser>> reporters = new HashMap<>();
+        for (CreateProject p : projects) {
+            List<JiraUser> users = new ArrayList<>(jira.assignableUsers(p.key()));
+            if (me != null && users.stream().noneMatch(u -> u.accountId().equals(me.accountId()))) {
+                users.add(0, me);
+            }
+            reporters.put(p.key(), users);
+        }
+        model.put("reportersByProject", reporters);
+        model.put("currentUserAccountId", me == null ? "" : me.accountId());
+        model.put("complianceOptions", List.of("Yes", "No", "Unsure"));
+
+        // Where Cancel returns to: the board the user came from, else the board list root.
+        String back = ctx.queryParam("board");
+        model.put("backHref", (back == null || back.isBlank()) ? "/" : "/board/" + back);
+        ctx.render("create.html", model);
+    }
+
+    /** Create the issue from the submitted form and jump to its detail page. */
+    private void doCreate(Context ctx) {
+        String project = ctx.formParam("project");
+        String issueType = ctx.formParam("issuetype");
+        String summary = ctx.formParam("summary");
+        String description = ctx.formParam("description");
+        String reporter = ctx.formParam("reporter");
+        String specDetail = ctx.formParam("specDetail");
+        String compliance = ctx.formParam("compliance");
+        if (project == null || project.isBlank() || issueType == null || issueType.isBlank()
+                || summary == null || summary.isBlank()) {
+            throw new IllegalStateException("Project, issue type, and summary are all required.");
+        }
+        String key = jira.createIssue(project.trim(), issueType.trim(), summary.trim(),
+                description, reporter, specDetail, compliance);
+        ctx.redirect("/issue/" + key);
+    }
+
+    /**
+     * The project to pre-select on the create screen: the project behind the
+     * given board slug if it resolves, otherwise the first available project.
+     */
+    private String defaultProjectKey(String boardSlug, List<CreateProject> projects) {
+        if (projects.isEmpty()) return "";
+        if (boardSlug != null && !boardSlug.isBlank()) {
+            for (BoardDef b : cfg.boards()) {
+                if (!b.slug().equals(boardSlug)) continue;
+                for (String key : projectKeysIn(b.jql())) {
+                    for (CreateProject p : projects) if (p.key().equals(key)) return key;
+                }
+            }
+        }
+        return projects.get(0).key();
+    }
+
+    /** Distinct project keys referenced by any configured board's JQL. */
+    private List<String> configuredProjectKeys() {
+        Set<String> keys = new LinkedHashSet<>();
+        for (BoardDef b : cfg.boards()) keys.addAll(projectKeysIn(b.jql()));
+        return List.copyOf(keys);
+    }
+
+    private static final Pattern PROJECT_KEY = Pattern.compile(
+            "project\\s*(?:=|in)\\s*\\(?\\s*\"?([A-Za-z][A-Za-z0-9_]*)\"?", Pattern.CASE_INSENSITIVE);
+
+    private static List<String> projectKeysIn(String jql) {
+        Set<String> keys = new LinkedHashSet<>();
+        Matcher m = PROJECT_KEY.matcher(jql);
+        while (m.find()) keys.add(m.group(1).toUpperCase());
+        return List.copyOf(keys);
     }
 
     private void renderList(Context ctx, String title, String jql, String activeSlug) {

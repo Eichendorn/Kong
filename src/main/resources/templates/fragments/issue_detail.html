@@ -38,6 +38,8 @@
             <span th:text="${issue.key()}">KEY-1</span>
             <span class="status" th:classappend="'sc-' + ${issue.statusCategory()}"
                   th:text="${issue.status()}">Status</span>
+            <span th:if="${issue.status() == 'Done'}" class="resolution"
+                  th:text="${issue.resolution().isBlank()} ? 'Unresolved' : ${issue.resolution()}">Done</span>
         </h1>
         <h2 th:text="${issue.summary()}">summary</h2>
         <dl class="meta">
