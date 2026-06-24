@@ -12,6 +12,7 @@ import com.fnba.jiramanager.jira.Transition;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -54,6 +55,7 @@ public class Routes {
         });
 
         app.get("/board/{slug}", this::board);
+        app.get("/kanban/{slug}", this::kanban);
         app.get("/search", this::search);
         app.get("/create", this::showCreate);
         app.post("/create", this::doCreate);
@@ -93,6 +95,59 @@ public class Routes {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Unknown board: " + slug));
         renderList(ctx, board.label(), board.jql(), slug);
+    }
+
+    /** A Kanban column: its label, the category to colour it by, and its cards. */
+    public record Column(String status, String statusCategory, List<Issue> issues) {}
+
+    /** Active statuses treated as backlog on the Kanban (hidden there). */
+    private static final Set<String> KANBAN_EXCLUDE = Set.of("Needs Spec Revision");
+
+    /** Statuses folded into a shared Kanban column; others get their own column. */
+    private static final Map<String, String> KANBAN_COLUMN = Map.of(
+            "Implement", "Implement",
+            "Ready to Test", "Implement",
+            "Testing", "Validation",
+            "Revisions Pending", "Validation",
+            "Ready to Demo", "Validation");
+
+    /** Kanban view of a board's active items (no backlog, no resolved), grouped into columns. */
+    private void kanban(Context ctx) {
+        String slug = ctx.pathParam("slug");
+        BoardDef board = cfg.boards().stream()
+                .filter(b -> b.slug().equals(slug))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Unknown board: " + slug));
+        Map<String, Object> model = baseModel(slug);
+        model.put("title", board.label() + " — Kanban");
+        model.put("boardSlug", slug);
+
+        // Reuses the (cached) board search. Active items only, folded into the
+        // configured columns; each column ordered by its earliest workflow status,
+        // cards newest-first. A column's colour comes from its lowest-rank status.
+        List<Issue> issues = jiraReady() ? jira.search(board.jql(), MAX_RESULTS) : List.<Issue>of();
+        Map<String, List<Issue>> byCol = new HashMap<>();
+        Map<String, Integer> colRank = new HashMap<>();
+        Map<String, String> colCat = new HashMap<>();
+        for (Issue i : issues) {
+            if (!i.isActive() || KANBAN_EXCLUDE.contains(i.status())) continue;
+            String col = KANBAN_COLUMN.getOrDefault(i.status(), i.status());
+            byCol.computeIfAbsent(col, k -> new ArrayList<>()).add(i);
+            int rank = i.statusRank();
+            if (!colRank.containsKey(col) || rank < colRank.get(col)) {
+                colRank.put(col, rank);
+                colCat.put(col, i.statusCategory());
+            }
+        }
+        List<Column> columns = byCol.entrySet().stream()
+                .sorted(Comparator.comparingInt(e -> colRank.get(e.getKey())))
+                .map(e -> new Column(e.getKey(), colCat.get(e.getKey()),
+                        e.getValue().stream()
+                                .sorted(Comparator.comparing(Issue::updated).reversed())
+                                .toList()))
+                .toList();
+        model.put("columns", columns);
+        ctx.render("kanban.html", model);
     }
 
     private void search(Context ctx) {

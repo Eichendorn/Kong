@@ -71,6 +71,34 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .create-task-btn { margin-left: auto; background: var(--accent); color: #fff;
     border: 1px solid var(--accent); border-radius: 6px; padding: 6px 14px; font-weight: 600; }
 .create-task-btn:hover { filter: brightness(1.1); text-decoration: none; }
+.view-toggle { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--panel-2); color: var(--text); }
+.view-toggle:hover { background: var(--border); text-decoration: none; }
+
+/* Kanban board */
+.kanban-content { max-width: none; }
+.kanban-head { display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 14px; }
+.kanban-head h1 { margin: 0; }
+.kanban { display: flex; gap: 12px; align-items: flex-start; overflow-x: auto; padding-bottom: 12px; }
+.kanban-col { flex: 0 0 280px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px; display: flex; flex-direction: column;
+    max-height: calc(100vh - 170px); }
+.kanban-col-head { display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 10px; }
+.kanban-count { color: var(--muted); font-size: 12px; }
+.kanban-cards { list-style: none; margin: 0; padding: 0; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 8px; }
+.kanban-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; }
+.kanban-card a { display: block; padding: 10px; color: var(--text); text-decoration: none; }
+.kanban-card a:hover { background: var(--border); border-radius: 8px; }
+.kanban-card-top { display: flex; justify-content: space-between; align-items: center;
+    gap: 8px; font-size: 12px; margin-bottom: 6px; }
+.kanban-status { font-size: 10px; padding: 1px 7px; white-space: nowrap; }
+.kanban-type { color: var(--muted); white-space: nowrap; }
+.kanban-card-summary { font-size: 13px; line-height: 1.35; }
+.kanban-card-foot { display: flex; justify-content: space-between; align-items: center;
+    gap: 8px; margin-top: 8px; font-size: 11px; color: var(--muted); }
 
 /* Create Task form */
 .create-form { display: flex; flex-direction: column; gap: 14px; max-width: 640px;

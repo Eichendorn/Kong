@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="'Jira Manager — ' + ${title}">Jira Manager</title>
+    <link rel="stylesheet" href="/app.css"/>
+    <script src="/htmx.min.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content kanban-content">
+    <div th:if="${!jiraReady}" class="banner">
+        No Jira credentials configured. Add your API token to
+        <code>config.local.properties</code> and restart.
+    </div>
+
+    <div class="kanban-head">
+        <h1 th:text="${title}">Kanban</h1>
+        <a class="view-toggle" th:href="@{'/board/' + ${boardSlug}}">☰ List view</a>
+    </div>
+
+    <div class="kanban" th:if="${!columns.isEmpty()}">
+        <section class="kanban-col" th:each="c : ${columns}">
+            <header class="kanban-col-head">
+                <span class="status" th:classappend="'sc-' + ${c.statusCategory()}"
+                      th:text="${c.status()}">Status</span>
+                <span class="kanban-count" th:text="${c.issues().size()}">0</span>
+            </header>
+            <ul class="kanban-cards">
+                <li class="kanban-card" th:each="i : ${c.issues()}">
+                    <a th:href="@{'/issue/' + ${i.key()}(board=${boardSlug})}">
+                        <div class="kanban-card-top">
+                            <span class="mini-key" th:text="${i.key()}">KEY-1</span>
+                            <span class="status kanban-status" th:if="${i.status() != c.status()}"
+                                  th:classappend="'sc-' + ${i.statusCategory()}"
+                                  th:text="${i.status()}">Status</span>
+                        </div>
+                        <div class="kanban-card-summary" th:text="${i.summary()}">summary</div>
+                        <div class="kanban-card-foot">
+                            <span class="kanban-type" th:text="${i.issueType()}">Type</span>
+                            <span th:text="${i.assignee()}">Assignee</span>
+                            <span class="kanban-days" th:title="'Days in status'"
+                                  th:text="${i.daysInStatusDisplay()} + 'd'">0d</span>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </section>
+    </div>
+
+    <p th:if="${columns.isEmpty()}" class="empty">No active items.</p>
+</main>
+</body>
+</html>

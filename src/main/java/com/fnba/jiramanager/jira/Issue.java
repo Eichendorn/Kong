@@ -121,6 +121,14 @@ public record Issue(
         return STATUS_ORDER.indexOf(status);
     }
 
+    /**
+     * "Active" = in flight: neither resolved (done category) nor sitting in a
+     * backlog/spec-queue status. Matches what the board hides by default.
+     */
+    public boolean isActive() {
+        return !"done".equals(statusCategory) && !BACKLOG_STATUSES.contains(status);
+    }
+
     public String rowClass() {
         StringBuilder sb = new StringBuilder();
         if ("done".equals(statusCategory)) sb.append("done");
