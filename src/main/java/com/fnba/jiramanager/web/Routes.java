@@ -93,27 +93,26 @@ public class Routes {
 
     /** Boilerplate the Specification Details field is primed with on the create screen. */
     private static final String SPEC_TEMPLATE = """
-            What is the problem?
+            **What is the problem?**
 
-            Problem description
+            - Problem description
 
-            Who is the owner?
+            **Who is the owner?**
 
-            Person who sponsors the task
+            - Person who sponsors the task
 
-            Who are the stakeholders?
+            **Who are the stakeholders?**
 
-            People or departments that will be impacted by the change
+            - People or departments that will be impacted by the change
 
-            Proposal
+            **Proposal**
 
-            What is the proposed outcome of the task?
+            - What is the proposed outcome of the task?
 
-            What does success look like, and how can we measure that?
+            **What does success look like, and how can we measure that?**
 
-            Requirement 1
-
-            Requirement 2
+            - Requirement 1
+            - Requirement 2
             """;
 
     /** Render the task-creation screen, pre-selecting the active board's project. */

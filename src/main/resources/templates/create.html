@@ -70,11 +70,20 @@
             <textarea name="description" rows="8" placeholder="Optional details…"></textarea>
         </label>
 
-        <label class="field">
-            <span class="field-label">Specification Details</span>
-            <textarea name="specDetail" rows="18" th:text="${specTemplate}"
+        <div class="field">
+            <div class="field-head-row">
+                <span class="field-label">Specification Details</span>
+                <div class="spec-toggle">
+                    <button type="button" id="spec-tab-formatted"
+                            onclick="specView('formatted')">Formatted</button>
+                    <button type="button" id="spec-tab-markdown"
+                            onclick="specView('markdown')">Markdown</button>
+                </div>
+            </div>
+            <div id="spec-preview" class="spec-preview"></div>
+            <textarea id="spec-edit" name="specDetail" rows="18" th:text="${specTemplate}"
                       placeholder="Optional…"></textarea>
-        </label>
+        </div>
 
         <label class="field">
             <span class="field-label">Compliance/Regulatory Attribute</span>
@@ -117,7 +126,55 @@
     function syncFields() {
         filterByProject('issuetype', document.getElementById('project').value, false);
     }
-    document.addEventListener('DOMContentLoaded', syncFields);
+
+    // Spec Details: render the same lightweight markup the server understands
+    // (**bold** and "- "/"* " bullets) so the field can be previewed formatted.
+    function renderSpecMarkdown(src) {
+        var lines = src.replace(/\r\n?/g, '\n').split('\n');
+        var html = '', para = [], inList = false;
+        function inline(t) {
+            return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        }
+        function flushPara() {
+            if (para.length) { html += '<p>' + para.map(inline).join('<br>') + '</p>'; para = []; }
+        }
+        function closeList() { if (inList) { html += '</ul>'; inList = false; } }
+        lines.forEach(function (line) {
+            var t = line.replace(/^\s+/, '');
+            if (t.indexOf('- ') === 0 || t.indexOf('* ') === 0) {
+                flushPara();
+                if (!inList) { html += '<ul>'; inList = true; }
+                html += '<li>' + inline(t.substring(2)) + '</li>';
+            } else if (line.trim() === '') {
+                flushPara(); closeList();
+            } else {
+                closeList(); para.push(line);
+            }
+        });
+        flushPara(); closeList();
+        return html || '<p class="muted">Nothing to preview.</p>';
+    }
+
+    function specView(mode) {
+        var ta = document.getElementById('spec-edit');
+        var pv = document.getElementById('spec-preview');
+        var bF = document.getElementById('spec-tab-formatted');
+        var bM = document.getElementById('spec-tab-markdown');
+        if (mode === 'markdown') {
+            ta.style.display = ''; pv.style.display = 'none';
+            bM.classList.add('active'); bF.classList.remove('active');
+        } else {
+            pv.innerHTML = renderSpecMarkdown(ta.value);
+            pv.style.display = ''; ta.style.display = 'none';
+            bF.classList.add('active'); bM.classList.remove('active');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        syncFields();
+        specView('formatted');   // default to the formatted preview
+    });
 
     // Reporter type-ahead: clicking a suggestion fills the visible name and the
     // hidden account id; clicking anywhere else dismisses the suggestion list.

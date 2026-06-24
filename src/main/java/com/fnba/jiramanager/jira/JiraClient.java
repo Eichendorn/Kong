@@ -377,9 +377,12 @@ public class JiraClient {
     }
 
     /**
-     * Wrap plain text into Atlassian Document Format. Blank lines separate
-     * paragraphs; single newlines within a paragraph become hard breaks, so
-     * multi-line input (e.g. the spec template) keeps its structure in Jira.
+     * Wrap lightly-marked-up plain text into Atlassian Document Format:
+     * <ul>
+     *   <li>lines beginning {@code "- "} / {@code "* "} become bullet-list items;</li>
+     *   <li>{@code **bold**} spans become strong-marked text;</li>
+     *   <li>blank lines separate paragraphs; other single newlines are hard breaks.</li>
+     * </ul>
      * Empty paragraphs are never emitted, which keeps the doc schema-valid.
      */
     private ObjectNode adf(String text) {
@@ -388,26 +391,57 @@ public class JiraClient {
         doc.put("type", "doc");
         doc.put("version", 1);
         ArrayNode content = doc.putArray("content");
-        for (String block : normalized.split("\n[ \t]*\n")) {
-            if (block.isBlank()) continue;
-            ObjectNode para = content.addObject();
-            para.put("type", "paragraph");
-            ArrayNode paraContent = para.putArray("content");
-            String[] lines = block.split("\n", -1);
-            for (int i = 0; i < lines.length; i++) {
-                if (i > 0) paraContent.addObject().put("type", "hardBreak");
-                if (!lines[i].isEmpty()) {
-                    paraContent.addObject().put("type", "text").put("text", lines[i]);
+
+        List<String> paragraph = new ArrayList<>();
+        ArrayNode bulletItems = null;  // content array of the open bullet list, or null
+        for (String line : normalized.split("\n", -1)) {
+            String trimmed = line.stripLeading();
+            boolean isBullet = trimmed.startsWith("- ") || trimmed.startsWith("* ");
+            if (isBullet) {
+                flushParagraph(content, paragraph);
+                if (bulletItems == null) {
+                    bulletItems = content.addObject().put("type", "bulletList").putArray("content");
                 }
+                ObjectNode itemPara = bulletItems.addObject().put("type", "listItem")
+                        .putArray("content").addObject();
+                itemPara.put("type", "paragraph");
+                appendInline(itemPara.putArray("content"), trimmed.substring(2));
+            } else if (line.isBlank()) {
+                flushParagraph(content, paragraph);
+                bulletItems = null;
+            } else {
+                bulletItems = null;          // a normal line ends any open bullet list
+                paragraph.add(line);
             }
         }
-        // Guard: a non-blank input always yields ≥1 paragraph, but never ship an
-        // empty doc (callers only pass non-blank text).
+        flushParagraph(content, paragraph);
+
+        // Guard: callers only pass non-blank text, but never ship an empty doc.
         if (content.isEmpty()) {
-            content.addObject().put("type", "paragraph")
-                    .putArray("content").addObject().put("type", "text").put("text", text);
+            appendInline(content.addObject().put("type", "paragraph").putArray("content"), text);
         }
         return doc;
+    }
+
+    /** Emit the buffered lines as one paragraph (hard breaks between them), then clear. */
+    private void flushParagraph(ArrayNode content, List<String> lines) {
+        if (lines.isEmpty()) return;
+        ArrayNode pc = content.addObject().put("type", "paragraph").putArray("content");
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0) pc.addObject().put("type", "hardBreak");
+            appendInline(pc, lines.get(i));
+        }
+        lines.clear();
+    }
+
+    /** Append text nodes for one line, turning {@code **bold**} spans into strong marks. */
+    private void appendInline(ArrayNode target, String text) {
+        String[] parts = text.split("\\*\\*", -1);
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].isEmpty()) continue;
+            ObjectNode node = target.addObject().put("type", "text").put("text", parts[i]);
+            if (i % 2 == 1) node.putArray("marks").addObject().put("type", "strong");
+        }
     }
 
     private static String enc(String s) {
