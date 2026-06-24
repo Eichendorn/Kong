@@ -66,6 +66,11 @@
                       th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/priority'}"
                       hx-target="closest dd" hx-swap="innerHTML"
                       th:text="${issue.priority()}">Priority</span></dd>
+            <dt>Dev Tester</dt>
+            <dd><span class="inline-edit" title="Click to edit"
+                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/devtester'}"
+                      hx-target="closest dd" hx-swap="innerHTML"
+                      th:text="${issue.devTesterDisplay()}">Dev Tester</span></dd>
             <dt>Dev Checklists</dt>
             <dd>
                 <span th:if="${issue.checklistsComplete()}" class="badge badge-yes">Complete</span>

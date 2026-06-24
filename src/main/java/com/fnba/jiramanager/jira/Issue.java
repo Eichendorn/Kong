@@ -23,6 +23,7 @@ public record Issue(
         String issueType,
         String assignee,
         String devTester,
+        List<JiraUser> devTesterUsers,
         String reporter,
         String priority,
         Double storyPoints,
@@ -70,6 +71,7 @@ public record Issue(
                 f.path("issuetype").path("name").asText(""),
                 f.path("assignee").path("displayName").asText("Unassigned"),
                 extractUserNames(f.path(DEV_TESTER_FIELD)),
+                extractUsers(f.path(DEV_TESTER_FIELD)),
                 f.path("reporter").path("displayName").asText(""),
                 f.path("priority").path("name").asText(""),
                 points,
@@ -188,6 +190,18 @@ public record Issue(
             if (!dn.isBlank()) names.add(dn);
         }
         return String.join(", ", names);
+    }
+
+    /** The users in a multi-user picker array as (accountId, displayName) pairs. */
+    private static List<JiraUser> extractUsers(JsonNode arr) {
+        List<JiraUser> out = new ArrayList<>();
+        if (arr != null && arr.isArray()) {
+            for (JsonNode u : arr) {
+                String id = u.path("accountId").asText("");
+                if (!id.isEmpty()) out.add(new JiraUser(id, u.path("displayName").asText("")));
+            }
+        }
+        return out;
     }
 
     public String storyPointsDisplay() {

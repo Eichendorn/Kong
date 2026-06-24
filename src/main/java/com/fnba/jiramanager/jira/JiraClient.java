@@ -347,6 +347,29 @@ public class JiraClient {
         editFields(key, fields);
     }
 
+    /** Add a Dev Tester (multi-user field) via an incremental update operation. */
+    public void addDevTester(String key, String accountId) {
+        updateUserList(key, Issue.DEV_TESTER_FIELD, accountId, true);
+    }
+
+    /** Remove a Dev Tester (multi-user field). */
+    public void removeDevTester(String key, String accountId) {
+        updateUserList(key, Issue.DEV_TESTER_FIELD, accountId, false);
+    }
+
+    /**
+     * Add or remove one user from a multi-user-picker field using the issue
+     * "update" operations, so the rest of the list is left untouched.
+     */
+    private void updateUserList(String key, String fieldId, String accountId, boolean add) {
+        ObjectNode op = mapper.createObjectNode();
+        op.putObject(add ? "add" : "remove").put("accountId", accountId.trim());
+        ObjectNode body = mapper.createObjectNode();
+        body.putObject("update").putArray(fieldId).add(op);
+        put(baseUrl + "/rest/api/3/issue/" + enc(key), body);
+        invalidateLists();
+    }
+
     /** Execute a workflow transition by id, without changing the resolution. */
     public void transition(String key, String transitionId) {
         transition(key, transitionId, null);

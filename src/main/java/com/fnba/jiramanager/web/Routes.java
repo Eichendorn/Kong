@@ -69,6 +69,8 @@ public class Routes {
         app.post("/issue/{key}/priority", this::doPriority);
         app.post("/issue/{key}/assignee", this::doAssignee);
         app.post("/issue/{key}/reporter", this::doReporter);
+        app.post("/issue/{key}/devtester/add", this::doDevTesterAdd);
+        app.post("/issue/{key}/devtester/remove/{accountId}", this::doDevTesterRemove);
         app.post("/issue/{key}/transition", this::doTransition);
         app.post("/issue/{key}/description", this::doDescription);
         app.post("/issue/{key}/spec", this::doSpec);
@@ -107,9 +109,11 @@ public class Routes {
     private static final Map<String, String> KANBAN_COLUMN = Map.of(
             "Implement", "Implement",
             "Ready to Test", "Implement",
-            "Testing", "Validation",
-            "Revisions Pending", "Validation",
-            "Ready to Demo", "Validation");
+            "Testing", "Validate",
+            "Revisions Pending", "Validate",
+            "Ready to Demo", "Validate",
+            "User Verification", "Verify",
+            "Verified", "Verify");
 
     /** Kanban view of a board's active items (no backlog, no resolved), grouped into columns. */
     private void kanban(Context ctx) {
@@ -408,6 +412,7 @@ public class Routes {
                 model.put("priorities", jira.priorities());
                 model.put("current", issue.priority());
             }
+            case "devtester" -> model.put("devTesters", issue.devTesterUsers());
             default -> { /* assignee/reporter: a type-ahead, no options to preload */ }
         }
         ctx.render("fragments/inline_edit.html", model);
@@ -449,6 +454,19 @@ public class Routes {
     private void doReporter(Context ctx) {
         String key = ctx.pathParam("key");
         jira.setReporter(key, ctx.formParam("accountId"));
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doDevTesterAdd(Context ctx) {
+        String key = ctx.pathParam("key");
+        String accountId = ctx.formParam("accountId");
+        if (accountId != null && !accountId.isBlank()) jira.addDevTester(key, accountId);
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doDevTesterRemove(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.removeDevTester(key, ctx.pathParam("accountId"));
         renderDetailFragment(ctx, key);
     }
 

@@ -121,6 +121,8 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .modal-top:hover { filter: brightness(1.1); }
 .kanban-card-top { display: flex; justify-content: space-between; align-items: center;
     gap: 8px; font-size: 12px; margin-bottom: 6px; }
+.kanban-card-top-right { display: inline-flex; align-items: center; gap: 6px; }
+.kanban-card-top-right .badge { padding: 1px 6px; font-size: 11px; }
 .kanban-status { font-size: 10px; padding: 1px 7px; white-space: nowrap; }
 .kanban-type { color: var(--muted); white-space: nowrap; }
 .kanban-card-summary { font-size: 13px; line-height: 1.35; }
@@ -171,6 +173,14 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .inline-editor select { max-width: 220px; }
 .inline-typeahead { position: relative; display: inline-block; }
 .inline-typeahead .ta-input { min-width: 190px; }
+.inline-multiuser { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.mu-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px 2px 9px;
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; font-size: 12px; }
+.mu-remove { width: 18px; height: 18px; padding: 0; border-radius: 50%; font-size: 14px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; color: var(--muted); border: none; cursor: pointer; }
+.mu-remove:hover { background: var(--border); color: var(--text); filter: none; }
+.inline-multiuser .ta-input { min-width: 130px; }
 
 /* Issue table */
 table.issues { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 8px; overflow: hidden; }

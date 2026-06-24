@@ -37,9 +37,15 @@
                        hx-target="#issue-modal-body" hx-swap="innerHTML">
                         <div class="kanban-card-top">
                             <span class="mini-key" th:text="${i.key()}">KEY-1</span>
-                            <span class="status kanban-status" th:if="${i.status() != c.status()}"
-                                  th:classappend="'sc-' + ${i.statusCategory()}"
-                                  th:text="${i.status()}">Status</span>
+                            <span class="kanban-card-top-right">
+                                <span class="status kanban-status" th:if="${i.status() != c.status()}"
+                                      th:classappend="'sc-' + ${i.statusCategory()}"
+                                      th:text="${i.status()}">Status</span>
+                                <span th:if="${i.checklistsComplete()}" class="badge badge-yes"
+                                      title="Checklists complete">✓</span>
+                                <span th:unless="${i.checklistsComplete()}" class="badge badge-no"
+                                      title="Checklists incomplete">✗</span>
+                            </span>
                         </div>
                         <div class="kanban-card-summary" th:text="${i.summary()}">summary</div>
                         <div class="kanban-card-foot">
