@@ -121,6 +121,7 @@ public class Routes {
         Map<String, Object> model = baseModel(slug);
         model.put("title", board.label() + " — Kanban");
         model.put("boardSlug", slug);
+        model.put("highlight", ctx.queryParam("highlight"));   // card to spotlight, if any
 
         // Reuses the (cached) board search. Active items only, folded into the
         // configured columns; each column ordered by its earliest workflow status,

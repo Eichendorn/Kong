@@ -92,6 +92,17 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .kanban-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; }
 .kanban-card a { display: block; padding: 10px; color: var(--text); text-decoration: none; }
 .kanban-card a:hover { background: var(--border); border-radius: 8px; }
+.kanban-card.highlighted { border-color: var(--accent); }
+
+/* Issue detail modal (Kanban) */
+.modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, .55);
+    display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+.modal-overlay[hidden] { display: none; }
+.modal-box { width: 100%; max-width: 920px; }
+.modal-bar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.modal-close { width: 32px; height: 32px; border-radius: 50%; padding: 0; font-size: 20px; line-height: 1;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
+.modal-close:hover { background: var(--border); filter: none; }
 .kanban-card-top { display: flex; justify-content: space-between; align-items: center;
     gap: 8px; font-size: 12px; margin-bottom: 6px; }
 .kanban-status { font-size: 10px; padding: 1px 7px; white-space: nowrap; }
@@ -185,6 +196,7 @@ body.issue-body .topbar { flex: 0 0 auto; }
 .issue-sidebar { flex: 0 0 270px; overflow-y: auto; background: var(--panel);
     border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
 .back-to-list { display: inline-block; margin: 2px 0 10px; font-size: 13px; }
+.sidebar-nav { display: flex; gap: 12px; margin: 2px 0 10px; font-size: 13px; }
 .mini-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .mini-list a { display: block; padding: 7px 9px; border-radius: 6px; color: var(--text); }
 .mini-list a:hover { background: var(--panel-2); }

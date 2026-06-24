@@ -6,6 +6,7 @@
     <title th:text="'Jira Manager — ' + ${title}">Jira Manager</title>
     <link rel="stylesheet" href="/app.css"/>
     <script src="/htmx.min.js"></script>
+    <script src="/detail-edit.js"></script>
 </head>
 <body>
 <div th:replace="~{fragments/nav :: nav}"></div>
@@ -29,8 +30,11 @@
                 <span class="kanban-count" th:text="${c.issues().size()}">0</span>
             </header>
             <ul class="kanban-cards">
-                <li class="kanban-card" th:each="i : ${c.issues()}">
-                    <a th:href="@{'/issue/' + ${i.key()}(board=${boardSlug})}">
+                <li class="kanban-card" th:each="i : ${c.issues()}"
+                    th:classappend="${i.key() == highlight} ? 'highlighted' : ''">
+                    <a href="#" onclick="openIssueModal(); return false;"
+                       th:attr="hx-get=@{'/issue/' + ${i.key()} + '/detail'}"
+                       hx-target="#issue-modal-body" hx-swap="innerHTML">
                         <div class="kanban-card-top">
                             <span class="mini-key" th:text="${i.key()}">KEY-1</span>
                             <span class="status kanban-status" th:if="${i.status() != c.status()}"
@@ -52,5 +56,40 @@
 
     <p th:if="${columns.isEmpty()}" class="empty">No active items.</p>
 </main>
+
+<!-- Issue detail modal: a card loads the detail fragment into the body. -->
+<div id="issue-modal" class="modal-overlay" hidden>
+    <div class="modal-box">
+        <div class="modal-bar">
+            <button type="button" class="modal-close" aria-label="Close"
+                    onclick="closeIssueModal()">&times;</button>
+        </div>
+        <div id="issue-modal-body"></div>
+    </div>
+</div>
+
+<script>
+    function openIssueModal() {
+        document.getElementById('issue-modal').hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+    function closeIssueModal() {
+        document.getElementById('issue-modal').hidden = true;
+        document.getElementById('issue-modal-body').innerHTML = '';
+        document.body.style.overflow = '';
+    }
+    // Close on backdrop click or Escape.
+    document.getElementById('issue-modal').addEventListener('click', function (e) {
+        if (e.target === this) closeIssueModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeIssueModal();
+    });
+    // Bring the spotlighted card (returned from its detail page) into view.
+    (function () {
+        var card = document.querySelector('.kanban-card.highlighted');
+        if (card) card.scrollIntoView({ block: 'center', inline: 'center' });
+    })();
+</script>
 </body>
 </html>
