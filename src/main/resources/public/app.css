@@ -101,9 +101,10 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .modal-overlay[hidden] { display: none; }
 .modal-box { width: 100%; max-width: 920px; }
 .modal-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.modal-jump { background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+.modal-bar-left { display: inline-flex; align-items: center; gap: 10px; }
+.modal-jump, .modal-open-tab { background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
     border-radius: 6px; padding: 5px 12px; font-size: 13px; cursor: pointer; }
-.modal-jump:hover { background: var(--border); filter: none; }
+.modal-jump:hover, .modal-open-tab:hover { background: var(--border); filter: none; text-decoration: none; }
 .modal-close { width: 32px; height: 32px; border-radius: 50%; padding: 0; position: relative;
     font-size: 0; background: var(--panel-2); color: var(--text);
     border: 1px solid var(--border); cursor: pointer; }
