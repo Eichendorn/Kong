@@ -109,10 +109,15 @@ public class JiraClient {
         return new JiraUser(u.path("accountId").asText(""), u.path("displayName").asText(""));
     }
 
-    /** Active users assignable in a project — a practical Reporter picklist. */
-    public List<JiraUser> assignableUsers(String projectKey) {
-        JsonNode arr = get(baseUrl + "/rest/api/3/user/assignable/search"
-                + "?maxResults=200&project=" + enc(projectKey));
+    /**
+     * Active users assignable in a project, optionally narrowed by a typed
+     * {@code query} (matches name/email) — backs the Reporter type-ahead.
+     */
+    public List<JiraUser> assignableUsers(String projectKey, String query, int max) {
+        String url = baseUrl + "/rest/api/3/user/assignable/search"
+                + "?maxResults=" + max + "&project=" + enc(projectKey);
+        if (query != null && !query.isBlank()) url += "&query=" + enc(query.trim());
+        JsonNode arr = get(url);
         List<JiraUser> out = new ArrayList<>();
         for (JsonNode u : arr) {
             if (!u.path("active").asBoolean(true)) continue;
@@ -371,18 +376,37 @@ public class JiraClient {
         }
     }
 
-    /** Wrap plain text into a minimal Atlassian Document Format doc. */
+    /**
+     * Wrap plain text into Atlassian Document Format. Blank lines separate
+     * paragraphs; single newlines within a paragraph become hard breaks, so
+     * multi-line input (e.g. the spec template) keeps its structure in Jira.
+     * Empty paragraphs are never emitted, which keeps the doc schema-valid.
+     */
     private ObjectNode adf(String text) {
+        String normalized = text.replace("\r\n", "\n").replace("\r", "\n");
         ObjectNode doc = mapper.createObjectNode();
         doc.put("type", "doc");
         doc.put("version", 1);
         ArrayNode content = doc.putArray("content");
-        ObjectNode para = content.addObject();
-        para.put("type", "paragraph");
-        ArrayNode paraContent = para.putArray("content");
-        ObjectNode textNode = paraContent.addObject();
-        textNode.put("type", "text");
-        textNode.put("text", text);
+        for (String block : normalized.split("\n[ \t]*\n")) {
+            if (block.isBlank()) continue;
+            ObjectNode para = content.addObject();
+            para.put("type", "paragraph");
+            ArrayNode paraContent = para.putArray("content");
+            String[] lines = block.split("\n", -1);
+            for (int i = 0; i < lines.length; i++) {
+                if (i > 0) paraContent.addObject().put("type", "hardBreak");
+                if (!lines[i].isEmpty()) {
+                    paraContent.addObject().put("type", "text").put("text", lines[i]);
+                }
+            }
+        }
+        // Guard: a non-blank input always yields ≥1 paragraph, but never ship an
+        // empty doc (callers only pass non-blank text).
+        if (content.isEmpty()) {
+            content.addObject().put("type", "paragraph")
+                    .putArray("content").addObject().put("type", "text").put("text", text);
+        }
         return doc;
     }
 

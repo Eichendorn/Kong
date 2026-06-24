@@ -79,6 +79,17 @@ h1 { font-size: 20px; margin: 0 0 4px; }
     background: var(--panel-2); color: var(--text); }
 .btn-secondary:hover { background: var(--border); text-decoration: none; }
 
+/* Reporter type-ahead */
+.reporter-field { position: relative; }
+.reporter-field input[type="text"] { width: 100%; box-sizing: border-box; }
+.suggestions { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; }
+.suggest-list { list-style: none; margin: 2px 0 0; padding: 4px;
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+    max-height: 240px; overflow-y: auto; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+.suggest-item { display: block; width: 100%; text-align: left; background: none;
+    border: none; color: var(--text); padding: 6px 9px; border-radius: 4px; cursor: pointer; }
+.suggest-item:hover { background: var(--accent); color: #fff; }
+
 /* Issue table */
 table.issues { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 8px; overflow: hidden; }
 table.issues th, table.issues td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }

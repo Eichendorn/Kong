@@ -51,13 +51,18 @@
 
         <label class="field">
             <span class="field-label">Reporter</span>
-            <select id="reporter" name="reporter">
-                <th:block th:each="p : ${projects}">
-                    <option th:each="u : ${reportersByProject.get(p.key())}"
-                            th:value="${u.accountId()}" th:text="${u.displayName()}"
-                            th:attr="data-project=${p.key()},data-current=${u.accountId() == currentUserAccountId}">User</option>
-                </th:block>
-            </select>
+            <div class="reporter-field">
+                <input type="text" id="reporter-input" name="reporterName" autocomplete="off"
+                       th:value="${currentUserName}" placeholder="Type a name…"
+                       oninput="document.getElementById('reporter-account').value=''"
+                       hx-get="/users/suggest"
+                       hx-trigger="keyup changed delay:250ms"
+                       hx-target="#reporter-suggestions" hx-swap="innerHTML"
+                       hx-include="#project"/>
+                <input type="hidden" id="reporter-account" name="reporter"
+                       th:value="${currentUserAccountId}"/>
+                <div id="reporter-suggestions" class="suggestions"></div>
+            </div>
         </label>
 
         <label class="field">
@@ -67,7 +72,8 @@
 
         <label class="field">
             <span class="field-label">Specification Details</span>
-            <textarea name="specDetail" rows="6" placeholder="Optional…"></textarea>
+            <textarea name="specDetail" rows="18" th:text="${specTemplate}"
+                      placeholder="Optional…"></textarea>
         </label>
 
         <label class="field">
@@ -109,11 +115,23 @@
         }
     }
     function syncFields() {
-        var proj = document.getElementById('project').value;
-        filterByProject('issuetype', proj, false);
-        filterByProject('reporter', proj, true);
+        filterByProject('issuetype', document.getElementById('project').value, false);
     }
     document.addEventListener('DOMContentLoaded', syncFields);
+
+    // Reporter type-ahead: clicking a suggestion fills the visible name and the
+    // hidden account id; clicking anywhere else dismisses the suggestion list.
+    document.addEventListener('click', function (e) {
+        var item = e.target.closest('.suggest-item');
+        var box = document.getElementById('reporter-suggestions');
+        if (item) {
+            document.getElementById('reporter-input').value = item.getAttribute('data-name');
+            document.getElementById('reporter-account').value = item.getAttribute('data-account');
+            if (box) box.innerHTML = '';
+        } else if (box && !e.target.closest('.reporter-field')) {
+            box.innerHTML = '';
+        }
+    });
 </script>
 </body>
 </html>

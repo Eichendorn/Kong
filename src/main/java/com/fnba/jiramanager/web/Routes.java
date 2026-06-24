@@ -12,7 +12,6 @@ import com.fnba.jiramanager.jira.Transition;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -50,6 +49,7 @@ public class Routes {
         app.get("/search", this::search);
         app.get("/create", this::showCreate);
         app.post("/create", this::doCreate);
+        app.get("/users/suggest", this::suggestUsers);
         app.get("/issue/{key}", this::issue);
         app.get("/issue/{key}/detail", this::detailFragment);
 
@@ -91,6 +91,31 @@ public class Routes {
     private static final Set<String> ALLOWED_ISSUE_TYPES = Set.of(
             "Encompass", "Encompass Bug", "Refactor", "Encompass Investigation");
 
+    /** Boilerplate the Specification Details field is primed with on the create screen. */
+    private static final String SPEC_TEMPLATE = """
+            What is the problem?
+
+            Problem description
+
+            Who is the owner?
+
+            Person who sponsors the task
+
+            Who are the stakeholders?
+
+            People or departments that will be impacted by the change
+
+            Proposal
+
+            What is the proposed outcome of the task?
+
+            What does success look like, and how can we measure that?
+
+            Requirement 1
+
+            Requirement 2
+            """;
+
     /** Render the task-creation screen, pre-selecting the active board's project. */
     private void showCreate(Context ctx) {
         Map<String, Object> model = baseModel(null);
@@ -106,20 +131,13 @@ public class Routes {
         model.put("projects", projects);
         model.put("defaultProjectKey", defaultProjectKey(ctx.queryParam("board"), projects));
 
-        // Reporter picklist (per project) defaulting to the current user, plus the
-        // Compliance/Regulatory options. Only fetched when Jira is reachable.
+        // Reporter defaults to the current user; the field itself is a type-ahead
+        // backed by /users/suggest. Compliance options are a fixed set.
         JiraUser me = jiraReady() ? jira.currentUser() : null;
-        Map<String, List<JiraUser>> reporters = new HashMap<>();
-        for (CreateProject p : projects) {
-            List<JiraUser> users = new ArrayList<>(jira.assignableUsers(p.key()));
-            if (me != null && users.stream().noneMatch(u -> u.accountId().equals(me.accountId()))) {
-                users.add(0, me);
-            }
-            reporters.put(p.key(), users);
-        }
-        model.put("reportersByProject", reporters);
         model.put("currentUserAccountId", me == null ? "" : me.accountId());
+        model.put("currentUserName", me == null ? "" : me.displayName());
         model.put("complianceOptions", List.of("Yes", "No", "Unsure"));
+        model.put("specTemplate", SPEC_TEMPLATE);
 
         // Where Cancel returns to: the board the user came from, else the board list root.
         String back = ctx.queryParam("board");
@@ -143,6 +161,19 @@ public class Routes {
         String key = jira.createIssue(project.trim(), issueType.trim(), summary.trim(),
                 description, reporter, specDetail, compliance);
         ctx.redirect("/issue/" + key);
+    }
+
+    /** Type-ahead suggestions for the Reporter field, scoped to the chosen project. */
+    private void suggestUsers(Context ctx) {
+        String project = ctx.queryParam("project");
+        String q = ctx.queryParam("reporterName");
+        List<JiraUser> users = List.of();
+        if (jiraReady() && project != null && !project.isBlank() && q != null && !q.isBlank()) {
+            users = jira.assignableUsers(project, q, 8);
+        }
+        Map<String, Object> model = new HashMap<>();
+        model.put("users", users);
+        ctx.render("fragments/user_suggestions.html", model);
     }
 
     /**
