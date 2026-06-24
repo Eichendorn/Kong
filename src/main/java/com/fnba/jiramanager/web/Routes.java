@@ -18,6 +18,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +33,9 @@ import java.util.regex.Pattern;
 public class Routes {
 
     private static final int MAX_RESULTS = 500;
+
+    /** Runs the independent Jira reads of a page concurrently (blocking I/O → virtual threads). */
+    private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
 
     private final Config cfg;
     private final JiraClient jira;
@@ -243,15 +251,18 @@ public class Routes {
         BoardDef board = resolveBoard(ctx, key);
         Map<String, Object> model = baseModel(board == null ? "" : board.slug());
         model.put("title", key);
-        model.put("issue", jira.getIssue(key));
-        model.put("transitions", jira.transitions(key));
-        model.put("comments", jira.comments(key));
-        model.put("runs", claude.forIssue(key));
-        // Compact list for the left sidebar (key + summary only — no changelog fetch).
-        List<Issue> sidebar = (board != null && jiraReady())
+        // Fire the independent Jira reads concurrently, then join.
+        var issueF = async(() -> jira.getIssue(key));
+        var transF = async(() -> jira.transitions(key));
+        var commsF = async(() -> jira.comments(key));
+        var sidebarF = async(() -> (board != null && jiraReady())
                 ? sortByStatus(jira.searchBrief(board.jql(), MAX_RESULTS))
-                : List.<Issue>of();
-        model.put("sidebarIssues", sidebar);
+                : List.<Issue>of());
+        model.put("issue", join(issueF));
+        model.put("transitions", join(transF));
+        model.put("comments", join(commsF));
+        model.put("runs", claude.forIssue(key));
+        model.put("sidebarIssues", join(sidebarF));
         ctx.render("issue.html", model);
     }
 
@@ -456,13 +467,30 @@ public class Routes {
         ctx.render("fragments/issue_detail.html", detailModel(key));
     }
 
-    /** Base model for the issue detail fragment. */
+    /** Base model for the issue detail fragment — the three reads run concurrently. */
     private Map<String, Object> detailModel(String key) {
+        var issueF = async(() -> jira.getIssue(key));
+        var transF = async(() -> jira.transitions(key));
+        var commsF = async(() -> jira.comments(key));
         Map<String, Object> model = new HashMap<>();
-        model.put("issue", jira.getIssue(key));
-        model.put("transitions", jira.transitions(key));
-        model.put("comments", jira.comments(key));
+        model.put("issue", join(issueF));
+        model.put("transitions", join(transF));
+        model.put("comments", join(commsF));
         return model;
+    }
+
+    private <T> CompletableFuture<T> async(Supplier<T> task) {
+        return CompletableFuture.supplyAsync(task, pool);
+    }
+
+    /** Join a future, unwrapping the cause so Javalin's exception mappers still apply. */
+    private static <T> T join(CompletableFuture<T> f) {
+        try {
+            return f.join();
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof RuntimeException re) throw re;
+            throw e;
+        }
     }
 
     private void renderRunsFragment(Context ctx, String key) {

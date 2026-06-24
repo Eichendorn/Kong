@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * Thin server-side wrapper around the Jira Cloud REST API (v3). All calls use
@@ -44,12 +47,46 @@ public class JiraClient {
                 .encodeToString(creds.getBytes(StandardCharsets.UTF_8));
     }
 
+    // ---- Caching -----------------------------------------------------------
+    // Board/sidebar list queries and slow-changing metadata (priorities,
+    // resolutions, create-meta) are the expensive reads. List results carry a
+    // short TTL and are dropped on any write; metadata gets a long TTL.
+
+    private record Cached(Object value, long expiresAt) {}
+
+    private final Map<String, Cached> cache = new ConcurrentHashMap<>();
+    private static final long LIST_TTL_MS = 60_000;     // board + sidebar issue lists
+    private static final long META_TTL_MS = 600_000;    // priorities, resolutions, create-meta
+
+    @SuppressWarnings("unchecked")
+    private <T> T cached(String key, long ttlMs, Supplier<T> loader) {
+        long now = System.currentTimeMillis();
+        Cached e = cache.get(key);
+        if (e != null && e.expiresAt() > now) return (T) e.value();
+        T v = loader.get();
+        cache.put(key, new Cached(v, now + ttlMs));
+        return v;
+    }
+
+    /** Drop cached issue lists so the next board/sidebar load reflects a write. */
+    public void invalidateLists() {
+        cache.keySet().removeIf(k -> k.startsWith("list:"));
+    }
+
     // ---- Reads -------------------------------------------------------------
 
     /** Run a JQL search and return up to {@code maxResults} issues, paginating as needed. */
     public List<Issue> search(String jql, int maxResults) {
-        String fields = "summary,status,issuetype,assignee,reporter,priority,updated,created,description,"
-                + STORY_POINTS_FIELD + "," + Issue.DEV_CHECKLISTS_FIELD + "," + Issue.SMART_CHECKLIST_FIELD
+        return cached("list:full:" + maxResults + ":" + jql, LIST_TTL_MS, () -> doSearch(jql, maxResults));
+    }
+
+    private List<Issue> doSearch(String jql, int maxResults) {
+        // Only the fields the board table actually renders. "Days in status" uses
+        // the cheap statuscategorychangedate field (expand=changelog was ~5x slower);
+        // description/priority/reporter/story-points are omitted — they aren't shown
+        // in the list and are loaded per-issue on the detail page.
+        String fields = "summary,status,issuetype,assignee,updated,created,statuscategorychangedate,"
+                + Issue.DEV_CHECKLISTS_FIELD + "," + Issue.SMART_CHECKLIST_FIELD
                 + "," + Issue.DEV_TESTER_FIELD;
         List<Issue> out = new ArrayList<>();
         // The enhanced search endpoint (/search/jql) paginates with an opaque
@@ -62,7 +99,6 @@ public class JiraClient {
                     + "?jql=" + enc(jql)
                     + "&maxResults=" + pageSize
                     + "&fields=" + enc(fields)
-                    + "&expand=" + enc("changelog")
                     + (nextPageToken == null ? "" : "&nextPageToken=" + enc(nextPageToken));
             JsonNode root = get(url);
             JsonNode issues = root.path("issues");
@@ -82,6 +118,11 @@ public class JiraClient {
      * changelog expand. Much cheaper than {@link #search} for big result sets.
      */
     public List<Issue> searchBrief(String jql, int maxResults) {
+        return cached("list:brief:" + maxResults + ":" + jql, LIST_TTL_MS,
+                () -> doSearchBrief(jql, maxResults));
+    }
+
+    private List<Issue> doSearchBrief(String jql, int maxResults) {
         String fields = "summary,status,issuetype,updated";
         List<Issue> out = new ArrayList<>();
         String nextPageToken = null;
@@ -163,6 +204,11 @@ public class JiraClient {
      * (non-subtask) issue types. Restricted to {@code projectKeys} when given.
      */
     public List<CreateProject> createMeta(List<String> projectKeys) {
+        String keys = projectKeys == null ? "" : String.join(",", projectKeys);
+        return cached("meta:createmeta:" + keys, META_TTL_MS, () -> doCreateMeta(projectKeys));
+    }
+
+    private List<CreateProject> doCreateMeta(List<String> projectKeys) {
         String url = baseUrl + "/rest/api/3/issue/createmeta?expand=projects.issuetypes";
         if (projectKeys != null && !projectKeys.isEmpty()) {
             url += "&projectKeys=" + enc(String.join(",", projectKeys));
@@ -215,20 +261,24 @@ public class JiraClient {
 
     /** Every resolution configured on the Jira site. */
     public List<Resolution> allResolutions() {
-        JsonNode root = get(baseUrl + "/rest/api/3/resolution");
-        List<Resolution> out = new ArrayList<>();
-        for (JsonNode r : root) {
-            out.add(new Resolution(r.path("id").asText(), r.path("name").asText()));
-        }
-        return out;
+        return cached("meta:resolutions", META_TTL_MS, () -> {
+            JsonNode root = get(baseUrl + "/rest/api/3/resolution");
+            List<Resolution> out = new ArrayList<>();
+            for (JsonNode r : root) {
+                out.add(new Resolution(r.path("id").asText(), r.path("name").asText()));
+            }
+            return out;
+        });
     }
 
     /** All priorities configured on the site. */
     public List<Priority> priorities() {
-        JsonNode arr = get(baseUrl + "/rest/api/3/priority");
-        List<Priority> out = new ArrayList<>();
-        for (JsonNode p : arr) out.add(new Priority(p.path("id").asText(), p.path("name").asText()));
-        return out;
+        return cached("meta:priorities", META_TTL_MS, () -> {
+            JsonNode arr = get(baseUrl + "/rest/api/3/priority");
+            List<Priority> out = new ArrayList<>();
+            for (JsonNode p : arr) out.add(new Priority(p.path("id").asText(), p.path("name").asText()));
+            return out;
+        });
     }
 
     /** The non-subtask issue types available in a project (for changing an issue's type). */
@@ -260,6 +310,7 @@ public class JiraClient {
         ObjectNode body = mapper.createObjectNode();
         body.set("fields", fields);
         JsonNode resp = post(baseUrl + "/rest/api/3/issue", body);
+        invalidateLists();   // a new issue should show up in the board immediately
         return resp.path("key").asText("");
     }
 
@@ -313,6 +364,7 @@ public class JiraClient {
             body.putObject("fields").putObject("resolution").put("name", resolutionName.trim());
         }
         post(baseUrl + "/rest/api/3/issue/" + enc(key) + "/transitions", body);
+        invalidateLists();   // status/resolution changed — refresh list views
     }
 
     /** Update simple fields. Use {@link #STORY_POINTS_FIELD} for points. */
@@ -320,6 +372,7 @@ public class JiraClient {
         ObjectNode body = mapper.createObjectNode();
         body.set("fields", fields);
         put(baseUrl + "/rest/api/3/issue/" + enc(key), body);
+        invalidateLists();   // a list-visible field may have changed
     }
 
     /** Set the Description (plain text wrapped as ADF; blank clears it). */

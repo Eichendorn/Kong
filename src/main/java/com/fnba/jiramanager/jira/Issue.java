@@ -144,26 +144,16 @@ public record Issue(
     }
 
     /**
-     * When the issue last entered its current status: the most recent "status"
-     * change in the changelog, or the created date if it never transitioned.
-     * Requires the search to have been run with {@code expand=changelog}.
+     * When the issue last changed status category — the {@code statuscategorychangedate}
+     * field — falling back to the created date. This is a cheap field (no changelog
+     * expand needed); note it tracks category moves (To Do→In Progress→Done), so it
+     * does not reset on transitions between statuses within the same category.
      */
     private static Instant statusEntry(JsonNode node) {
-        Instant best = null;
-        JsonNode histories = node.path("changelog").path("histories");
-        if (histories.isArray()) {
-            for (JsonNode h : histories) {
-                boolean isStatusChange = false;
-                for (JsonNode it : h.path("items")) {
-                    if ("status".equals(it.path("field").asText())) { isStatusChange = true; break; }
-                }
-                if (!isStatusChange) continue;
-                Instant created = parseInstant(h.path("created").asText(""));
-                if (created != null && (best == null || created.isAfter(best))) best = created;
-            }
-        }
-        if (best == null) best = parseInstant(node.path("fields").path("created").asText(""));
-        return best;
+        JsonNode f = node.path("fields");
+        Instant t = parseInstant(f.path("statuscategorychangedate").asText(""));
+        if (t == null) t = parseInstant(f.path("created").asText(""));
+        return t;
     }
 
     /** Parse Jira timestamps like "2026-06-22T09:59:28.100-0400"; null on failure. */
