@@ -22,7 +22,7 @@
     <div class="board-controls">
         <button onclick="var t=document.querySelector('.issues');t.classList.toggle('show-backlog');this.textContent=t.classList.contains('show-backlog')?'Hide Backlog':'Show Backlog'" type="button">Show Backlog</button>
         <button onclick="var t=document.querySelector('.issues');t.classList.toggle('show-done');this.textContent=t.classList.contains('show-done')?'Hide Done':'Show Done'" type="button">Show Done</button>
-        <a class="view-toggle" th:href="@{'/kanban/' + ${activeSlug}}">⊞ Kanban</a>
+        <a class="view-toggle" th:href="@{'/kanban/' + ${activeSlug}}">KANBAN</a>
         <a class="create-task-btn" th:href="@{/create(board=${activeSlug})}">New Task</a>
     </div>
 

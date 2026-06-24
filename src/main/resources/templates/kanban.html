@@ -19,7 +19,7 @@
 
     <div class="kanban-head">
         <h1 th:text="${title}">Kanban</h1>
-        <a class="view-toggle" th:href="@{'/board/' + ${boardSlug}}">☰ List view</a>
+        <a class="view-toggle" th:href="@{'/board/' + ${boardSlug}}">LIST</a>
     </div>
 
     <div class="kanban" th:if="${!columns.isEmpty()}">
@@ -61,11 +61,13 @@
 <div id="issue-modal" class="modal-overlay" hidden>
     <div class="modal-box">
         <div class="modal-bar">
+            <button type="button" class="modal-jump" onclick="jumpToComments()">↓ Comments</button>
             <button type="button" class="modal-close" aria-label="Close"
                     onclick="closeIssueModal()">&times;</button>
         </div>
         <div id="issue-modal-body"></div>
     </div>
+    <button type="button" class="modal-top" onclick="scrollModalTop()">↑ Top</button>
 </div>
 
 <script>
@@ -78,10 +80,17 @@
         document.getElementById('issue-modal-body').innerHTML = '';
         document.body.style.overflow = '';
     }
+    function jumpToComments() {
+        var c = document.querySelector('#issue-modal-body .comments');
+        if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     // Close on backdrop click or Escape.
     document.getElementById('issue-modal').addEventListener('click', function (e) {
         if (e.target === this) closeIssueModal();
     });
+    function scrollModalTop() {
+        document.getElementById('issue-modal').scrollTo({ top: 0, behavior: 'smooth' });
+    }
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeIssueModal();
     });
