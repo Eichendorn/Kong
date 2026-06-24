@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<section th:fragment="detail" id="issue-detail" class="detail">
+<section th:fragment="detail" id="issue-detail" class="detail"
+         th:attr="data-detail-url=@{'/issue/' + ${issue.key()} + '/detail'}">
 
     <div class="detail-head">
         <!-- Resolution prompt: shown when a move to Done needs a resolution chosen. -->
@@ -27,11 +28,13 @@
               th:if="${!resolutionPrompt and !transitions.isEmpty() and issue.status() != 'Done'}" method="post"
               th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/transition'}"
               hx-target="#issue-detail" hx-swap="outerHTML">
-            <select name="transitionId">
+            <select name="transitionId"
+                    onchange="this.form.querySelector('button').disabled = (this.value === '')">
+                <option value="" selected>— Select transition —</option>
                 <option th:each="t : ${transitions}" th:value="${t.id()}"
                         th:text="${t.name()} + ' → ' + ${t.toStatus()}">move</option>
             </select>
-            <button type="submit">Apply</button>
+            <button type="submit" disabled>Apply</button>
         </form>
 
         <h1>
@@ -43,10 +46,26 @@
         </h1>
         <h2 th:text="${issue.summary()}">summary</h2>
         <dl class="meta">
-            <dt>Type</dt><dd th:text="${issue.issueType()}">Task</dd>
-            <dt>Assignee</dt><dd th:text="${issue.assignee()}">Assignee</dd>
-            <dt>Reporter</dt><dd th:text="${issue.reporter()}">Reporter</dd>
-            <dt>Priority</dt><dd th:text="${issue.priority()}">Priority</dd>
+            <dt>Type</dt>
+            <dd><span class="inline-edit" title="Click to edit"
+                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/type'}"
+                      hx-target="closest dd" hx-swap="innerHTML"
+                      th:text="${issue.issueType()}">Task</span></dd>
+            <dt>Assignee</dt>
+            <dd><span class="inline-edit" title="Click to edit"
+                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/assignee'}"
+                      hx-target="closest dd" hx-swap="innerHTML"
+                      th:text="${issue.assignee()}">Assignee</span></dd>
+            <dt>Reporter</dt>
+            <dd><span class="inline-edit" title="Click to edit"
+                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/reporter'}"
+                      hx-target="closest dd" hx-swap="innerHTML"
+                      th:text="${issue.reporter()}">Reporter</span></dd>
+            <dt>Priority</dt>
+            <dd><span class="inline-edit" title="Click to edit"
+                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/priority'}"
+                      hx-target="closest dd" hx-swap="innerHTML"
+                      th:text="${issue.priority()}">Priority</span></dd>
             <dt>Dev Checklists</dt>
             <dd>
                 <span th:if="${issue.checklistsComplete()}" class="badge badge-yes">Complete</span>

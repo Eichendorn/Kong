@@ -223,6 +223,22 @@ public class JiraClient {
         return out;
     }
 
+    /** All priorities configured on the site. */
+    public List<Priority> priorities() {
+        JsonNode arr = get(baseUrl + "/rest/api/3/priority");
+        List<Priority> out = new ArrayList<>();
+        for (JsonNode p : arr) out.add(new Priority(p.path("id").asText(), p.path("name").asText()));
+        return out;
+    }
+
+    /** The non-subtask issue types available in a project (for changing an issue's type). */
+    public List<CreateProject.CreateIssueType> projectIssueTypes(String projectKey) {
+        for (CreateProject p : createMeta(List.of(projectKey))) {
+            if (p.key().equalsIgnoreCase(projectKey)) return p.issueTypes();
+        }
+        return List.of();
+    }
+
     // ---- Writes ------------------------------------------------------------
 
     /**
@@ -238,7 +254,7 @@ public class JiraClient {
         fields.putObject("issuetype").put("id", issueTypeId);
         fields.put("summary", summary);
         if (notBlank(description)) fields.set("description", adf(description));
-        if (notBlank(reporterAccountId)) fields.putObject("reporter").put("id", reporterAccountId.trim());
+        if (notBlank(reporterAccountId)) fields.putObject("reporter").put("accountId", reporterAccountId.trim());
         if (notBlank(specDetail)) fields.set(Issue.SPEC_DETAIL_FIELD, adf(specDetail));
         if (notBlank(complianceValue)) fields.putObject(COMPLIANCE_FIELD).put("value", complianceValue.trim());
         ObjectNode body = mapper.createObjectNode();
@@ -249,6 +265,35 @@ public class JiraClient {
 
     private static boolean notBlank(String s) {
         return s != null && !s.isBlank();
+    }
+
+    /** Change an issue's type. */
+    public void setIssueType(String key, String issueTypeId) {
+        ObjectNode fields = mapper.createObjectNode();
+        fields.putObject("issuetype").put("id", issueTypeId);
+        editFields(key, fields);
+    }
+
+    /** Change an issue's priority. */
+    public void setPriority(String key, String priorityId) {
+        ObjectNode fields = mapper.createObjectNode();
+        fields.putObject("priority").put("id", priorityId);
+        editFields(key, fields);
+    }
+
+    /** Set the assignee (blank account id clears it / unassigns). */
+    public void setAssignee(String key, String accountId) {
+        ObjectNode fields = mapper.createObjectNode();
+        if (notBlank(accountId)) fields.putObject("assignee").put("accountId", accountId.trim());
+        else fields.putNull("assignee");
+        editFields(key, fields);
+    }
+
+    /** Set the reporter. */
+    public void setReporter(String key, String accountId) {
+        ObjectNode fields = mapper.createObjectNode();
+        fields.putObject("reporter").put("accountId", accountId.trim());
+        editFields(key, fields);
     }
 
     /** Execute a workflow transition by id, without changing the resolution. */

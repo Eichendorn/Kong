@@ -53,6 +53,12 @@ public class Routes {
         app.get("/issue/{key}", this::issue);
         app.get("/issue/{key}/detail", this::detailFragment);
 
+        app.get("/issue/{key}/edit/{field}", this::editField);
+        app.get("/issue/{key}/users/suggest", this::suggestIssueUsers);
+        app.post("/issue/{key}/type", this::doType);
+        app.post("/issue/{key}/priority", this::doPriority);
+        app.post("/issue/{key}/assignee", this::doAssignee);
+        app.post("/issue/{key}/reporter", this::doReporter);
         app.post("/issue/{key}/transition", this::doTransition);
         app.post("/issue/{key}/description", this::doDescription);
         app.post("/issue/{key}/spec", this::doSpec);
@@ -275,6 +281,12 @@ public class Routes {
         String transitionId = ctx.formParam("transitionId");
         String resolution = ctx.formParam("resolution");
 
+        // No transition chosen (blank default) — just re-render, never transition.
+        if (transitionId == null || transitionId.isBlank()) {
+            renderDetailFragment(ctx, key);
+            return;
+        }
+
         List<Transition> transitions = jira.transitions(key);
         Transition target = transitions.stream()
                 .filter(t -> t.id().equals(transitionId))
@@ -309,6 +321,74 @@ public class Routes {
         jira.transition(key, transitionId, resolution);
         claude.onTransition(key, toStatus);
         renderDetailFragment(ctx, key);
+    }
+
+    /** Load the inline editor for one meta field (type/priority/assignee/reporter). */
+    private void editField(Context ctx) {
+        String key = ctx.pathParam("key");
+        String field = ctx.pathParam("field");
+        Issue issue = jira.getIssue(key);
+        Map<String, Object> model = new HashMap<>();
+        model.put("key", key);
+        model.put("field", field);
+        switch (field) {
+            case "type" -> {
+                String proj = projectKeyOf(key);
+                model.put("issueTypes", proj == null ? List.of() : jira.projectIssueTypes(proj));
+                model.put("current", issue.issueType());
+            }
+            case "priority" -> {
+                model.put("priorities", jira.priorities());
+                model.put("current", issue.priority());
+            }
+            default -> { /* assignee/reporter: a type-ahead, no options to preload */ }
+        }
+        ctx.render("fragments/inline_edit.html", model);
+    }
+
+    /** Type-ahead user suggestions for inline assignee/reporter edits. */
+    private void suggestIssueUsers(Context ctx) {
+        String key = ctx.pathParam("key");
+        String field = ctx.queryParam("field");
+        String q = ctx.queryParam("q");
+        String proj = projectKeyOf(key);
+        List<JiraUser> users = (proj != null && q != null && !q.isBlank())
+                ? jira.assignableUsers(proj, q, 8) : List.<JiraUser>of();
+        Map<String, Object> model = new HashMap<>();
+        model.put("key", key);
+        model.put("field", field);
+        model.put("users", users);
+        ctx.render("fragments/inline_user_suggestions.html", model);
+    }
+
+    private void doType(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.setIssueType(key, ctx.formParam("issueType"));
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doPriority(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.setPriority(key, ctx.formParam("priority"));
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doAssignee(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.setAssignee(key, ctx.formParam("accountId"));
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doReporter(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.setReporter(key, ctx.formParam("accountId"));
+        renderDetailFragment(ctx, key);
+    }
+
+    /** Project key prefix of an issue key (e.g. MIN-1673 → MIN), or null. */
+    private static String projectKeyOf(String key) {
+        int dash = key.indexOf('-');
+        return dash > 0 ? key.substring(0, dash) : null;
     }
 
     private void doDescription(Context ctx) {

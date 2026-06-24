@@ -54,6 +54,10 @@ input, textarea, select, button {
 }
 button { background: var(--accent); border-color: var(--accent); color: #fff; cursor: pointer; }
 button:hover { filter: brightness(1.1); }
+button:disabled, button:disabled:hover {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+    cursor: not-allowed; filter: none; opacity: .45;
+}
 
 .content { padding: 18px 24px; max-width: 1100px; margin: 0 auto; }
 h1 { font-size: 20px; margin: 0 0 4px; }
@@ -104,6 +108,14 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .spec-preview p:last-child, .spec-preview ul:last-child { margin-bottom: 0; }
 .spec-preview ul { margin: 0 0 8px; padding-left: 20px; }
 .spec-preview strong { font-weight: 700; color: var(--text); }
+
+/* Inline meta editing */
+.inline-edit { cursor: pointer; border-bottom: 1px dashed transparent; }
+.inline-edit:hover { border-bottom-color: var(--muted); }
+.inline-editor { display: inline-block; }
+.inline-editor select { max-width: 220px; }
+.inline-typeahead { position: relative; display: inline-block; }
+.inline-typeahead .ta-input { min-width: 190px; }
 
 /* Issue table */
 table.issues { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 8px; overflow: hidden; }

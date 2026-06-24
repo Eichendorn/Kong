@@ -1,0 +1,24 @@
+<div xmlns:th="http://www.thymeleaf.org" class="inline-editor" th:switch="${field}">
+
+    <select th:case="'type'" name="issueType"
+            th:attr="hx-post=@{'/issue/' + ${key} + '/type'}"
+            hx-trigger="change" hx-target="#issue-detail" hx-swap="outerHTML">
+        <option th:each="t : ${issueTypes}" th:value="${t.id()}" th:text="${t.name()}"
+                th:selected="${t.name() == current}">Type</option>
+    </select>
+
+    <select th:case="'priority'" name="priority"
+            th:attr="hx-post=@{'/issue/' + ${key} + '/priority'}"
+            hx-trigger="change" hx-target="#issue-detail" hx-swap="outerHTML">
+        <option th:each="p : ${priorities}" th:value="${p.id()}" th:text="${p.name()}"
+                th:selected="${p.name() == current}">Priority</option>
+    </select>
+
+    <span th:case="*" class="inline-typeahead">
+        <input type="text" class="ta-input" autocomplete="off" name="q" placeholder="Type a name…"
+               th:attr="hx-get=@{'/issue/' + ${key} + '/users/suggest'(field=${field})}"
+               hx-trigger="keyup changed delay:250ms" hx-target="next .ta-suggestions" hx-swap="innerHTML"/>
+        <span class="ta-suggestions suggestions"></span>
+    </span>
+
+</div>
