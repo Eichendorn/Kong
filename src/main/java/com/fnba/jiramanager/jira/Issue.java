@@ -101,7 +101,7 @@ public record Issue(
     }
 
     private static final java.util.Set<String> BACKLOG_STATUSES =
-            java.util.Set.of("Backlog", "Specify", "Specify Done");
+            java.util.Set.of("Backlog", "Specify", "Specify Done", "Needs Spec Revision");
 
     /**
      * Workflow progression for the Encompass boards, least-advanced first.

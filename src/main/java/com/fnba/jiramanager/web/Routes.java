@@ -124,9 +124,6 @@ public class Routes {
                 .toList();
     }
 
-    /** Active statuses treated as backlog on the Kanban (hidden there). */
-    private static final Set<String> KANBAN_EXCLUDE = Set.of("Needs Spec Revision");
-
     /** Statuses folded into a shared Kanban column; others get their own column. */
     private static final Map<String, String> KANBAN_COLUMN = Map.of(
             "Implement", "Implement",
@@ -157,7 +154,7 @@ public class Routes {
         Map<String, Integer> colRank = new HashMap<>();
         Map<String, String> colCat = new HashMap<>();
         for (Issue i : issues) {
-            if (!i.isActive() || KANBAN_EXCLUDE.contains(i.status())) continue;
+            if (!i.isActive()) continue;
             String col = KANBAN_COLUMN.getOrDefault(i.status(), i.status());
             byCol.computeIfAbsent(col, k -> new ArrayList<>()).add(i);
             int rank = i.statusRank();
