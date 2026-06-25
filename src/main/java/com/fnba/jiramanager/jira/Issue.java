@@ -33,6 +33,8 @@ public record Issue(
         String descriptionText,
         String updated,
         Instant statusSince,
+        Instant categorySince,
+        Instant boardSince,
         boolean checklistsComplete,
         JsonNode raw
 ) {
@@ -62,6 +64,12 @@ public record Issue(
         }
         boolean complete = hasAllChecklistLinks(f.path(DEV_CHECKLISTS_FIELD))
                 && hasNoDelete(f.path(SMART_CHECKLIST_FIELD));
+        Instant createdAt = parseInstant(f.path("created").asText(""));
+        Instant categorySince = parseInstant(f.path("statuscategorychangedate").asText(""));
+        if (categorySince == null) categorySince = createdAt;
+        // Default board-since to created; the Kanban overlays the actual
+        // Encompass On Deck entry date (which needs the changelog).
+        Instant boardSince = createdAt;
         return new Issue(
                 node.path("key").asText(""),
                 f.path("summary").asText(""),
@@ -81,6 +89,8 @@ public record Issue(
                 extractDescription(f.path("description")),
                 f.path("updated").asText(""),
                 statusEntry(node),
+                categorySince,
+                boardSince,
                 complete,
                 node
         );
@@ -146,29 +156,57 @@ public record Issue(
         return sb.toString();
     }
 
-    /** Whole days since the issue last entered its current status; -1 if unknown. */
-    public long daysInStatus() {
-        if (statusSince == null) return -1;
-        return Duration.between(statusSince, Instant.now()).toDays();
+    /** A copy with changelog-derived timing overlaid (exact status-since and board-since). */
+    public Issue withTiming(Instant statusSince, Instant boardSince) {
+        return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
+                devTester, devTesterUsers, reporter, priority, storyPoints, devChecklists,
+                reasonForTracking, specDetail, descriptionText, updated, statusSince, categorySince,
+                boardSince, checklistsComplete, raw);
     }
 
-    /** Days-in-status for display, or an em dash when unknown. */
-    public String daysInStatusDisplay() {
-        long d = daysInStatus();
+    private static long daysSince(Instant t) {
+        return t == null ? -1 : Duration.between(t, Instant.now()).toDays();
+    }
+
+    private static String dayDisplay(long d) {
         return d < 0 ? "—" : String.valueOf(d);
     }
 
+    /** Whole days in the current status (exact), current column (status category), and on the board (since created). */
+    public long daysInStatus() { return daysSince(statusSince); }
+    public long daysInColumn() { return daysSince(categorySince); }
+    public long daysOnBoard() { return daysSince(boardSince); }
+
+    public String daysInStatusDisplay() { return dayDisplay(daysInStatus()); }
+    public String daysInColumnDisplay() { return dayDisplay(daysInColumn()); }
+    public String daysOnBoardDisplay() { return dayDisplay(daysOnBoard()); }
+
     /**
-     * When the issue last changed status category — the {@code statuscategorychangedate}
-     * field — falling back to the created date. This is a cheap field (no changelog
-     * expand needed); note it tracks category moves (To Do→In Progress→Done), so it
-     * does not reset on transitions between statuses within the same category.
+     * When the issue last entered its CURRENT status: the most recent "status"
+     * change in the changelog (requires the search to run with expand=changelog).
+     * Falls back to statuscategorychangedate, then the created date, when no
+     * changelog is present (e.g. a plain getIssue).
      */
     private static Instant statusEntry(JsonNode node) {
-        JsonNode f = node.path("fields");
-        Instant t = parseInstant(f.path("statuscategorychangedate").asText(""));
-        if (t == null) t = parseInstant(f.path("created").asText(""));
-        return t;
+        Instant best = null;
+        JsonNode histories = node.path("changelog").path("histories");
+        if (histories.isArray()) {
+            for (JsonNode h : histories) {
+                boolean isStatusChange = false;
+                for (JsonNode it : h.path("items")) {
+                    if ("status".equals(it.path("field").asText())) { isStatusChange = true; break; }
+                }
+                if (!isStatusChange) continue;
+                Instant created = parseInstant(h.path("created").asText(""));
+                if (created != null && (best == null || created.isAfter(best))) best = created;
+            }
+        }
+        if (best == null) {
+            JsonNode f = node.path("fields");
+            best = parseInstant(f.path("statuscategorychangedate").asText(""));
+            if (best == null) best = parseInstant(f.path("created").asText(""));
+        }
+        return best;
     }
 
     /** Parse Jira timestamps like "2026-06-22T09:59:28.100-0400"; null on failure. */

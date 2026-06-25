@@ -9,11 +9,13 @@ import com.fnba.jiramanager.jira.Issue;
 import com.fnba.jiramanager.jira.JiraClient;
 import com.fnba.jiramanager.jira.JiraUser;
 import com.fnba.jiramanager.jira.Resolution;
+import com.fnba.jiramanager.jira.Timing;
 import com.fnba.jiramanager.jira.Transition;
 import com.fnba.jiramanager.jira.TransitionLog;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -125,6 +127,9 @@ public class Routes {
             "On Deck", "Implement", "Track", "Validate", "Release", "Verify");
     private static final int DEFAULT_WIP = 5;
 
+    /** "Days on board" counts from when a task first enters this status. */
+    private static final String BOARD_ENTRY_STATUS = "Encompass On Deck";
+
     /** Cards sharing one status within a column, oldest-in-status first. */
     public record StatusGroup(String status, String statusCategory, List<Issue> issues) {}
 
@@ -183,12 +188,20 @@ public class Routes {
         // Reuses the (cached) board search. Active items only, folded into the
         // configured columns; each column ordered by its earliest workflow status,
         // cards newest-first. A column's colour comes from its lowest-rank status.
-        List<Issue> issues = jiraReady() ? jira.search(board.jql(), MAX_RESULTS) : List.<Issue>of();
+        List<Issue> all = jiraReady() ? jira.search(board.jql(), MAX_RESULTS) : List.<Issue>of();
+        List<Issue> active = all.stream().filter(Issue::isActive).toList();
+        // Changelog timing (exact status-since + board-since = Encompass On Deck
+        // entry), fetched only for the active cards, overlaid onto each issue.
+        Map<String, Timing> timings = jira.issueTimings(
+                active.stream().map(Issue::key).toList(), BOARD_ENTRY_STATUS);
         Map<String, List<Issue>> byCol = new HashMap<>();
         Map<String, Integer> colRank = new HashMap<>();
         Map<String, String> colCat = new HashMap<>();
-        for (Issue i : issues) {
-            if (!i.isActive()) continue;
+        for (Issue base : active) {
+            Timing t = timings.get(base.key());
+            Instant ss = (t != null && t.statusSince() != null) ? t.statusSince() : base.statusSince();
+            Instant bs = (t != null && t.boardSince() != null) ? t.boardSince() : base.boardSince();
+            Issue i = base.withTiming(ss, bs);
             String col = KANBAN_COLUMN.getOrDefault(i.status(), i.status());
             byCol.computeIfAbsent(col, k -> new ArrayList<>()).add(i);
             int rank = i.statusRank();

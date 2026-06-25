@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -84,10 +85,10 @@ public class JiraClient {
     }
 
     private List<Issue> doSearch(String jql, int maxResults) {
-        // Only the fields the board table actually renders. "Days in status" uses
-        // the cheap statuscategorychangedate field (expand=changelog was ~5x slower);
-        // description/priority/reporter/story-points are omitted — they aren't shown
-        // in the list and are loaded per-issue on the detail page.
+        // Only the fields the board table renders — no changelog (it was ~5x slower
+        // over a 500-issue board). The list's "Days in status" uses the cheap
+        // statuscategorychangedate; the Kanban fetches exact per-status timing for
+        // its (far fewer) active cards via statusSinceByKeys.
         String fields = "summary,status,issuetype,assignee,updated,created,statuscategorychangedate,"
                 + Issue.DEV_CHECKLISTS_FIELD + "," + Issue.SMART_CHECKLIST_FIELD
                 + "," + Issue.DEV_TESTER_FIELD;
@@ -189,6 +190,48 @@ public class JiraClient {
         out.sort(Comparator.comparing(TransitionLog::at,
                 Comparator.nullsLast(Comparator.reverseOrder())));
         return out.size() > 200 ? new ArrayList<>(out.subList(0, 200)) : out;
+    }
+
+    /**
+     * Changelog-derived timing per issue, for the given keys only (so the heavy
+     * changelog expand stays bounded to the Kanban's active cards): exact
+     * status-since, plus when the issue first entered {@code boardEntryStatus}.
+     * Cached; cleared on writes.
+     */
+    public Map<String, Timing> issueTimings(List<String> keys, String boardEntryStatus) {
+        if (keys == null || keys.isEmpty()) return Map.of();
+        List<String> sorted = new ArrayList<>(keys);
+        sorted.sort(null);
+        return cached("list:timings:" + boardEntryStatus + ":" + String.join(",", sorted), LIST_TTL_MS, () -> {
+            Map<String, Timing> out = new HashMap<>();
+            String jql = "key in (" + String.join(",", keys) + ")";
+            String url = baseUrl + "/rest/api/3/search/jql"
+                    + "?jql=" + enc(jql)
+                    + "&maxResults=" + keys.size()
+                    + "&fields=" + enc("status")
+                    + "&expand=" + enc("changelog");
+            JsonNode root = get(url);
+            for (JsonNode n : root.path("issues")) {
+                Issue iss = Issue.from(n, STORY_POINTS_FIELD);
+                out.put(iss.key(), new Timing(iss.statusSince(), earliestEntryInto(n, boardEntryStatus)));
+            }
+            return out;
+        });
+    }
+
+    /** Earliest time the issue transitioned INTO {@code status}, from the changelog; null if never. */
+    private static Instant earliestEntryInto(JsonNode node, String status) {
+        Instant best = null;
+        for (JsonNode h : node.path("changelog").path("histories")) {
+            for (JsonNode it : h.path("items")) {
+                if ("status".equals(it.path("field").asText())
+                        && status.equals(it.path("toString").asText())) {
+                    OffsetDateTime o = parseOdt(h.path("created").asText(""));
+                    if (o != null && (best == null || o.toInstant().isBefore(best))) best = o.toInstant();
+                }
+            }
+        }
+        return best;
     }
 
     private static OffsetDateTime parseOdt(String s) {
