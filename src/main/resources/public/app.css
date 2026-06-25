@@ -172,6 +172,11 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .kanban-status { font-size: 10px; padding: 1px 7px; white-space: nowrap; }
 .kanban-type { color: var(--muted); white-space: nowrap; }
 .kanban-card-summary { font-size: 13px; line-height: 1.35; }
+.kanban-tester { font-size: 12px; margin-top: 6px; color: var(--text); }
+.kanban-tester-label { color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
+    font-size: 10px; margin-right: 5px; }
+.kanban-tester-name { color: #e6dca0; }
+.kanban-assignee { color: #8ce0a8; }
 .kanban-card-foot { display: flex; justify-content: space-between; align-items: center;
     gap: 8px; margin-top: 8px; font-size: 11px; color: var(--muted); }
 

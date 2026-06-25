@@ -59,9 +59,14 @@
                                     </span>
                                 </div>
                                 <div class="kanban-card-summary" th:text="${i.summary()}">summary</div>
+                                <div class="kanban-tester"
+                                     th:if="${i.status() == 'Ready to Test' or i.status() == 'Testing' or i.status() == 'Revisions Pending'}">
+                                    <span class="kanban-tester-label">Tester</span>
+                                    <span class="kanban-tester-name" th:text="${i.devTesterDisplay()}">Name</span>
+                                </div>
                                 <div class="kanban-card-foot">
                                     <span class="kanban-type" th:text="${i.issueType()}">Type</span>
-                                    <span th:text="${i.assignee()}">Assignee</span>
+                                    <span class="kanban-assignee" th:text="${i.assignee()}">Assignee</span>
                                     <span class="kanban-days" th:title="'Days in status'"
                                           th:text="${i.daysInStatusDisplay()} + 'd'">0d</span>
                                 </div>
