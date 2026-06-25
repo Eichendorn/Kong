@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Jira Manager — Settings</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+    <link rel="stylesheet" href="/app.css"/>
+    <script src="/htmx.min.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content">
+    <h1>Settings</h1>
+
+    <section class="settings-section">
+        <h2>Kanban WIP Limits</h2>
+        <p class="muted">Maximum cards per Kanban column. A column that exceeds its limit
+            is outlined in red.</p>
+        <form class="wip-form" method="post" action="/settings/wip">
+            <div class="wip-row" th:each="row, st : ${wipRows}">
+                <label class="wip-col" th:for="'wip_' + ${st.index}" th:text="${row.column()}">Column</label>
+                <input type="number" min="1" step="1" class="wip-input"
+                       th:id="'wip_' + ${st.index}" th:attr="name='wip_' + ${st.index}"
+                       th:value="${row.limit()}"/>
+            </div>
+            <div class="settings-actions">
+                <button type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

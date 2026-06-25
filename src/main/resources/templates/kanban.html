@@ -4,6 +4,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="'Jira Manager — ' + ${title}">Jira Manager</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
     <link rel="stylesheet" href="/app.css"/>
     <script src="/htmx.min.js"></script>
     <script src="/detail-edit.js"></script>
@@ -23,11 +24,15 @@
     </div>
 
     <div class="kanban" th:if="${!columns.isEmpty()}">
-        <section class="kanban-col" th:each="c : ${columns}">
+        <section class="kanban-col" th:each="c : ${columns}"
+                 th:classappend="${c.overWip()} ? 'over-wip' : ''">
             <header class="kanban-col-head">
                 <span class="status" th:classappend="'sc-' + ${c.statusCategory()}"
                       th:text="${c.status()}">Status</span>
-                <span class="kanban-count" th:text="${c.cardCount()}">0</span>
+                <span class="kanban-count" th:classappend="${c.overWip()} ? 'over' : ''"
+                      th:title="'Cards / WIP limit'">
+                    <span th:text="${c.cardCount()}">0</span>/<span th:text="${c.wipLimit()}">0</span>
+                </span>
             </header>
             <div class="kanban-cards">
                 <div class="kanban-group" th:each="g, gs : ${c.groups()}">
@@ -39,7 +44,10 @@
                                th:attr="hx-get=@{'/issue/' + ${i.key()} + '/detail'}, data-key=${i.key()}"
                                hx-target="#issue-modal-body" hx-swap="innerHTML">
                                 <div class="kanban-card-top">
-                                    <span class="mini-key" th:text="${i.key()}">KEY-1</span>
+                                    <span class="kanban-key-wrap">
+                                        <span class="mini-key" th:text="${i.key()}">KEY-1</span>
+                                        <button th:replace="~{fragments/icons :: copyLink(${jiraBaseUrl} + '/browse/' + ${i.key()}, ${i.key()})}"></button>
+                                    </span>
                                     <span class="kanban-card-top-right">
                                         <span class="status kanban-status" th:if="${i.status() != c.status()}"
                                               th:classappend="'sc-' + ${i.statusCategory()}"

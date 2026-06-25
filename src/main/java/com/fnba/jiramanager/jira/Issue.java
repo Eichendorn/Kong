@@ -123,6 +123,11 @@ public record Issue(
         return STATUS_ORDER.indexOf(status);
     }
 
+    /** Workflow rank of an arbitrary status name; -1 if unknown. */
+    public static int rankOf(String status) {
+        return STATUS_ORDER.indexOf(status);
+    }
+
     /**
      * "Active" = in flight: neither resolved (done category) nor sitting in a
      * backlog/spec-queue status. Matches what the board hides by default.

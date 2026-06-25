@@ -47,6 +47,8 @@ code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-si
 .boards a.active, .boards a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 .search { margin-left: auto; display: flex; gap: 6px; flex: 1; min-width: 280px; max-width: 560px; }
 .search input { flex: 1; }
+.nav-settings { padding: 4px 10px; border-radius: 6px; color: var(--muted); white-space: nowrap; }
+.nav-settings:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 
 input, textarea, select, button {
     background: var(--panel-2); color: var(--text);
@@ -65,6 +67,16 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .banner { background: #4a3a1a; border: 1px solid var(--amber); padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; }
 .error { background: #432; border: 1px solid var(--red); color: #f5c2c2; padding: 10px 14px; border-radius: 8px; }
 .empty, .muted { color: var(--muted); }
+
+/* Settings screen */
+.settings-section { background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px; max-width: 480px; }
+.settings-section h2 { font-size: 15px; margin: 0 0 4px; }
+.wip-form { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.wip-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wip-col { font-size: 14px; }
+.wip-input { width: 90px; }
+.settings-actions { margin-top: 8px; }
 
 /* Board controls: Show toggles on the left, Create Task pushed to the right. */
 .board-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
@@ -87,6 +99,8 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .kanban-col-head { display: flex; align-items: center; justify-content: space-between;
     gap: 8px; margin-bottom: 10px; }
 .kanban-count { color: var(--muted); font-size: 12px; }
+.kanban-count.over { color: var(--red); font-weight: 700; }
+.kanban-col.over-wip { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
 .kanban-cards { overflow-y: auto; display: flex; flex-direction: column; }
 .kanban-group-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .kanban-group-sep { height: 2px; background: #e6dca0; opacity: .7; border-radius: 1px; margin: 12px 4px; }
@@ -123,7 +137,18 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .modal-top:hover { filter: brightness(1.1); }
 .kanban-card-top { display: flex; justify-content: space-between; align-items: center;
     gap: 8px; font-size: 12px; margin-bottom: 6px; }
+.kanban-key-wrap { display: inline-flex; align-items: center; gap: 3px; }
 .kanban-card-top-right { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Copy-Jira-link icon button (detail header + kanban cards) */
+.copy-link { position: relative; display: inline-flex; align-items: center; background: none;
+    border: none; padding: 0 2px; margin: 0; cursor: pointer; color: var(--muted); line-height: 0;
+    vertical-align: middle; }
+.copy-link:hover { color: var(--text); filter: none; background: none; }
+.copy-link svg { width: 13px; height: 13px; display: block; }
+.detail-head h1 .copy-link svg { width: 16px; height: 16px; }
+.copy-link.copied { color: #84cc16; }
+.copy-link.copied-mgr { color: #f5a623; }
 .kanban-card-top-right .badge { padding: 1px 6px; font-size: 11px; }
 .kanban-status { font-size: 10px; padding: 1px 7px; white-space: nowrap; }
 .kanban-type { color: var(--muted); white-space: nowrap; }

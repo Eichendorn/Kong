@@ -2,6 +2,7 @@ package com.fnba.jiramanager;
 
 import com.fnba.jiramanager.claude.ClaudeService;
 import com.fnba.jiramanager.config.Config;
+import com.fnba.jiramanager.config.Settings;
 import com.fnba.jiramanager.jira.JiraClient;
 import com.fnba.jiramanager.web.Routes;
 import io.javalin.Javalin;
@@ -26,6 +27,7 @@ public class App {
         // JiraClient is only constructed when credentials exist, so the app can
         // still boot (and show a helpful banner) before the token is set.
         JiraClient jira = cfg.hasJiraCredentials() ? new JiraClient(cfg) : null;
+        Settings settings = new Settings();
 
         Javalin app = Javalin.create(c -> {
             c.fileRenderer(new JavalinThymeleaf(buildTemplateEngine()));
@@ -37,7 +39,7 @@ public class App {
             c.showJavalinBanner = false;
         });
 
-        new Routes(cfg, jira, claude).register(app);
+        new Routes(cfg, jira, claude, settings).register(app);
 
         app.start(cfg.port());
         System.out.println("Jira Manager running at http://localhost:" + cfg.port());

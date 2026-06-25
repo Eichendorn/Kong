@@ -3,6 +3,7 @@ package com.fnba.jiramanager.web;
 import com.fnba.jiramanager.claude.ClaudeService;
 import com.fnba.jiramanager.config.BoardDef;
 import com.fnba.jiramanager.config.Config;
+import com.fnba.jiramanager.config.Settings;
 import com.fnba.jiramanager.jira.CreateProject;
 import com.fnba.jiramanager.jira.Issue;
 import com.fnba.jiramanager.jira.JiraClient;
@@ -41,11 +42,13 @@ public class Routes {
     private final Config cfg;
     private final JiraClient jira;
     private final ClaudeService claude;
+    private final Settings settings;
 
-    public Routes(Config cfg, JiraClient jira, ClaudeService claude) {
+    public Routes(Config cfg, JiraClient jira, ClaudeService claude, Settings settings) {
         this.cfg = cfg;
         this.jira = jira;
         this.claude = claude;
+        this.settings = settings;
     }
 
     public void register(Javalin app) {
@@ -59,6 +62,8 @@ public class Routes {
         app.get("/search", this::search);
         app.get("/create", this::showCreate);
         app.post("/create", this::doCreate);
+        app.get("/settings", this::showSettings);
+        app.post("/settings/wip", this::saveWipLimits);
         app.get("/users/suggest", this::suggestUsers);
         app.get("/issue/{key}", this::issue);
         app.get("/issue/{key}/detail", this::detailFragment);
@@ -99,12 +104,24 @@ public class Routes {
         renderList(ctx, board.label(), board.jql(), slug);
     }
 
-    /** A Kanban column: its label, colour category, and its status sub-groups. */
-    public record Column(String status, String statusCategory, List<StatusGroup> groups) {
+    /** A Kanban column: label, colour category, WIP limit, and status sub-groups. */
+    public record Column(String status, String statusCategory, int wipLimit, List<StatusGroup> groups) {
         public int cardCount() {
             return groups.stream().mapToInt(g -> g.issues().size()).sum();
         }
+        public boolean overWip() {
+            return wipLimit > 0 && cardCount() > wipLimit;
+        }
     }
+
+    /**
+     * The Kanban board columns in workflow order — the WIP-limit settings rows.
+     * These are columns, not statuses: a column's count sums every status mapped
+     * into it (see KANBAN_COLUMN), and its WIP limit applies to that total.
+     */
+    static final List<String> KANBAN_COLUMNS = List.of(
+            "On Deck", "Implement", "Track", "Validate", "Release", "Verify");
+    private static final int DEFAULT_WIP = 5;
 
     /** Cards sharing one status within a column, oldest-in-status first. */
     public record StatusGroup(String status, String statusCategory, List<Issue> issues) {}
@@ -112,6 +129,18 @@ public class Routes {
     /** Oldest first: earliest entry into the current status category sinks to the top. */
     private static final Comparator<Issue> BY_AGE_OLDEST_FIRST =
             Comparator.comparing(Issue::statusSince, Comparator.nullsLast(Comparator.naturalOrder()));
+
+    /** Earliest workflow rank of any status belonging to a column (for ordering empty columns). */
+    private static int columnRank(String label) {
+        int best = Issue.rankOf(label);   // self-mapped columns (e.g. Track); -1 otherwise
+        for (Map.Entry<String, String> e : KANBAN_COLUMN.entrySet()) {
+            if (e.getValue().equals(label)) {
+                int r = Issue.rankOf(e.getKey());
+                if (r >= 0 && (best < 0 || r < best)) best = r;
+            }
+        }
+        return best;
+    }
 
     /** Split a column's cards into status groups (workflow order), each aged oldest-first. */
     private static List<StatusGroup> statusGroups(List<Issue> issues) {
@@ -126,11 +155,14 @@ public class Routes {
 
     /** Statuses folded into a shared Kanban column; others get their own column. */
     private static final Map<String, String> KANBAN_COLUMN = Map.of(
+            "Encompass On Deck", "On Deck",
+            "Spec Review", "On Deck",
             "Implement", "Implement",
             "Ready to Test", "Implement",
             "Testing", "Validate",
             "Revisions Pending", "Validate",
             "Ready to Demo", "Validate",
+            "Releasing", "Release",
             "User Verification", "Verify",
             "Verified", "Verify");
 
@@ -163,9 +195,18 @@ public class Routes {
                 colCat.put(col, i.statusCategory());
             }
         }
+        // Always render the defined columns, even when empty (e.g. Release).
+        for (String label : KANBAN_COLUMNS) {
+            if (!byCol.containsKey(label)) {
+                byCol.put(label, new ArrayList<>());
+                colRank.put(label, columnRank(label));
+                colCat.put(label, "indeterminate");
+            }
+        }
         List<Column> columns = byCol.entrySet().stream()
                 .sorted(Comparator.comparingInt(e -> colRank.get(e.getKey())))
-                .map(e -> new Column(e.getKey(), colCat.get(e.getKey()), statusGroups(e.getValue())))
+                .map(e -> new Column(e.getKey(), colCat.get(e.getKey()),
+                        settings.wipLimit(e.getKey(), DEFAULT_WIP), statusGroups(e.getValue())))
                 .toList();
         model.put("columns", columns);
         ctx.render("kanban.html", model);
@@ -175,6 +216,34 @@ public class Routes {
         String jql = ctx.queryParamAsClass("jql", String.class)
                 .getOrDefault("ORDER BY updated DESC");
         renderList(ctx, "Search", jql, null);
+    }
+
+    /** One editable WIP-limit row on the settings screen. */
+    public record WipRow(String column, int limit) {}
+
+    private void showSettings(Context ctx) {
+        Map<String, Object> model = baseModel(null);
+        model.put("title", "Settings");
+        List<WipRow> rows = KANBAN_COLUMNS.stream()
+                .map(c -> new WipRow(c, settings.wipLimit(c, DEFAULT_WIP)))
+                .toList();
+        model.put("wipRows", rows);
+        ctx.render("settings.html", model);
+    }
+
+    private void saveWipLimits(Context ctx) {
+        Map<String, Integer> limits = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < KANBAN_COLUMNS.size(); i++) {
+            String raw = ctx.formParam("wip_" + i);
+            if (raw != null && !raw.isBlank()) {
+                try {
+                    int v = Integer.parseInt(raw.trim());
+                    if (v > 0) limits.put(KANBAN_COLUMNS.get(i), v);
+                } catch (NumberFormatException ignore) { /* skip invalid */ }
+            }
+        }
+        settings.setWipLimits(limits);
+        ctx.redirect("/settings");
     }
 
     /** The only issue types offered when creating a new task. */
@@ -566,7 +635,13 @@ public class Routes {
         model.put("issue", join(issueF));
         model.put("transitions", join(transF));
         model.put("comments", join(commsF));
+        model.put("jiraBaseUrl", jiraBrowseBase());
         return model;
+    }
+
+    /** Jira site base URL (no trailing slash) for building /browse/ links. */
+    private String jiraBrowseBase() {
+        return cfg.jiraBaseUrl().replaceAll("/+$", "");
     }
 
     private <T> CompletableFuture<T> async(Supplier<T> task) {
@@ -595,6 +670,7 @@ public class Routes {
         model.put("boards", cfg.boards());
         model.put("activeSlug", activeSlug == null ? "" : activeSlug);
         model.put("jiraReady", jiraReady());
+        model.put("jiraBaseUrl", jiraBrowseBase());
         return model;
     }
 
