@@ -50,6 +50,25 @@ code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-si
 .nav-settings { padding: 4px 10px; border-radius: 6px; color: var(--muted); white-space: nowrap; }
 .nav-settings:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 
+/* Nav dropdown menu (Maintenance) */
+.nav-menu { position: relative; }
+.nav-menu > summary { list-style: none; cursor: pointer; padding: 4px 10px; border-radius: 6px;
+    color: var(--muted); white-space: nowrap; }
+.nav-menu > summary::-webkit-details-marker { display: none; }
+.nav-menu[open] > summary, .nav-menu > summary:hover { background: var(--panel-2); color: var(--text); }
+.nav-menu-items { position: absolute; top: 100%; left: 0; z-index: 50; margin-top: 4px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px;
+    min-width: 190px; box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
+    display: flex; flex-direction: column; gap: 2px; }
+.nav-menu-items a { padding: 6px 10px; border-radius: 6px; color: var(--text); white-space: nowrap; }
+.nav-menu-items a:hover { background: var(--panel-2); text-decoration: none; }
+
+/* Recent Transitions */
+.txn { white-space: nowrap; }
+.txn-arrow { color: var(--muted); margin: 0 6px; }
+.txn-to { color: var(--text); }
+.txn-from { color: var(--muted); }
+
 input, textarea, select, button {
     background: var(--panel-2); color: var(--text);
     border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; font: inherit;

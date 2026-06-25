@@ -13,6 +13,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -142,6 +145,59 @@ public class JiraClient {
             nextPageToken = token.asText();
         }
         return out;
+    }
+
+    private static final DateTimeFormatter TXN_IN =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    private static final DateTimeFormatter TXN_OUT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+    /**
+     * Recent status transitions across the issues matching {@code jql}, newest
+     * first. Scans the changelog of up to {@code maxIssues} (most-recently-updated)
+     * issues and pulls out every {@code status} change. Cached briefly.
+     */
+    public List<TransitionLog> recentTransitions(String jql, int maxIssues) {
+        return cached("txnlog:" + maxIssues + ":" + jql, LIST_TTL_MS,
+                () -> doRecentTransitions(jql, maxIssues));
+    }
+
+    private List<TransitionLog> doRecentTransitions(String jql, int maxIssues) {
+        String url = baseUrl + "/rest/api/3/search/jql"
+                + "?jql=" + enc(jql)
+                + "&maxResults=" + Math.min(100, maxIssues)
+                + "&fields=" + enc("summary")
+                + "&expand=" + enc("changelog");
+        JsonNode root = get(url);
+        List<TransitionLog> out = new ArrayList<>();
+        for (JsonNode issue : root.path("issues")) {
+            String key = issue.path("key").asText("");
+            String summary = issue.path("fields").path("summary").asText("");
+            for (JsonNode h : issue.path("changelog").path("histories")) {
+                OffsetDateTime odt = parseOdt(h.path("created").asText(""));
+                String author = h.path("author").path("displayName").asText("");
+                for (JsonNode it : h.path("items")) {
+                    if (!"status".equals(it.path("field").asText())) continue;
+                    out.add(new TransitionLog(key, summary,
+                            it.path("fromString").asText(""), it.path("toString").asText(""),
+                            author,
+                            odt == null ? null : odt.toInstant(),
+                            odt == null ? "" : odt.format(TXN_OUT)));
+                }
+            }
+        }
+        out.sort(Comparator.comparing(TransitionLog::at,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+        return out.size() > 200 ? new ArrayList<>(out.subList(0, 200)) : out;
+    }
+
+    private static OffsetDateTime parseOdt(String s) {
+        if (s == null || s.isBlank()) return null;
+        try {
+            return OffsetDateTime.parse(s, TXN_IN);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /** The authenticated user (used to default the Reporter on new issues). */

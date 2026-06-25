@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Jira Manager — Recent Transitions</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+    <link rel="stylesheet" href="/app.css"/>
+    <script src="/htmx.min.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content">
+    <h1>Recent Transitions</h1>
+    <p class="jql muted">Status changes across the board, most recent first.</p>
+
+    <table class="issues" th:if="${!logs.isEmpty()}">
+        <thead>
+        <tr>
+            <th>When</th><th>Key</th><th>Summary</th><th>Transition</th><th>By</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="l : ${logs}">
+            <td class="days-in" th:text="${l.when()}">2026-01-01 00:00</td>
+            <td><a th:href="@{'/issue/' + ${l.key()}}" th:text="${l.key()}">KEY-1</a></td>
+            <td class="summary" th:text="${l.summary()}">summary</td>
+            <td class="txn">
+                <span class="txn-from" th:text="${l.from().isEmpty()} ? '—' : ${l.from()}">From</span>
+                <span class="txn-arrow">→</span>
+                <span class="txn-to" th:text="${l.to().isEmpty()} ? '—' : ${l.to()}">To</span>
+            </td>
+            <td th:text="${l.author()}">Author</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${logs.isEmpty()}" class="empty">No recent transitions.</p>
+</main>
+</body>
+</html>

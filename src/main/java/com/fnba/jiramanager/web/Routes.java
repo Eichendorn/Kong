@@ -10,6 +10,7 @@ import com.fnba.jiramanager.jira.JiraClient;
 import com.fnba.jiramanager.jira.JiraUser;
 import com.fnba.jiramanager.jira.Resolution;
 import com.fnba.jiramanager.jira.Transition;
+import com.fnba.jiramanager.jira.TransitionLog;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
@@ -64,6 +65,7 @@ public class Routes {
         app.post("/create", this::doCreate);
         app.get("/settings", this::showSettings);
         app.post("/settings/wip", this::saveWipLimits);
+        app.get("/maintenance/transitions", this::showTransitions);
         app.get("/users/suggest", this::suggestUsers);
         app.get("/issue/{key}", this::issue);
         app.get("/issue/{key}/detail", this::detailFragment);
@@ -244,6 +246,16 @@ public class Routes {
         }
         settings.setWipLimits(limits);
         ctx.redirect("/settings");
+    }
+
+    /** Maintenance → Recent Transitions: a newest-first log of status changes. */
+    private void showTransitions(Context ctx) {
+        Map<String, Object> model = baseModel(null);
+        model.put("title", "Recent Transitions");
+        String jql = cfg.boards().isEmpty()
+                ? "ORDER BY updated DESC" : cfg.boards().get(0).jql();
+        model.put("logs", jiraReady() ? jira.recentTransitions(jql, 50) : List.<TransitionLog>of());
+        ctx.render("recent_transitions.html", model);
     }
 
     /** The only issue types offered when creating a new task. */
