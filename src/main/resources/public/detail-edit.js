@@ -39,6 +39,15 @@
         var appUrl = window.location.origin + '/issue/' + btn.getAttribute('data-key');
         copyText(appUrl).then(function () { flash(btn, 'copied-mgr'); });
     }, true);
+    // Open the task in the Jira app in a new tab (capture phase so a card's
+    // click/dblclick doesn't also fire).
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.open-jira');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(btn.getAttribute('data-jira-url'), '_blank', 'noopener');
+    }, true);
 
     document.addEventListener('click', function (e) {
         // Picking a user suggestion saves the assignee/reporter.

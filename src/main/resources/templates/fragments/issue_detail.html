@@ -40,6 +40,7 @@
         <h1>
             <span th:text="${issue.key()}">KEY-1</span>
             <button th:replace="~{fragments/icons :: copyLink(${jiraBaseUrl} + '/browse/' + ${issue.key()}, ${issue.key()})}"></button>
+            <a th:replace="~{fragments/icons :: openJira(${jiraBaseUrl} + '/browse/' + ${issue.key()})}"></a>
             <span class="status" th:classappend="'sc-' + ${issue.statusCategory()}"
                   th:text="${issue.status()}">Status</span>
             <span th:if="${issue.status() == 'Done' or issue.status() == 'Canceled'}" class="resolution"

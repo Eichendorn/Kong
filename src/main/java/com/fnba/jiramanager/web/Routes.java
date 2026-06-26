@@ -154,24 +154,33 @@ public class Routes {
         Map<String, List<Issue>> byStatus = new HashMap<>();
         for (Issue i : issues) byStatus.computeIfAbsent(i.status(), k -> new ArrayList<>()).add(i);
         return byStatus.values().stream()
-                .sorted(Comparator.comparingInt(g -> g.get(0).statusRank()))
+                .sorted(Comparator.comparingInt(g ->
+                        GROUP_ORDER.getOrDefault(g.get(0).status(), g.get(0).statusRank())))
                 .map(g -> new StatusGroup(g.get(0).status(), g.get(0).statusCategory(),
                         g.stream().sorted(BY_AGE_OLDEST_FIRST).toList()))
                 .toList();
     }
 
     /** Statuses folded into a shared Kanban column; others get their own column. */
-    private static final Map<String, String> KANBAN_COLUMN = Map.of(
-            "Encompass On Deck", "On Deck",
-            "Spec Review", "On Deck",
-            "Implement", "Implement",
-            "Ready to Test", "Implement",
-            "Testing", "Validate",
-            "Revisions Pending", "Validate",
-            "Ready to Demo", "Validate",
-            "Releasing", "Release",
-            "User Verification", "Verify",
-            "Verified", "Verify");
+    private static final Map<String, String> KANBAN_COLUMN = Map.ofEntries(
+            Map.entry("Encompass On Deck", "On Deck"),
+            Map.entry("Spec Review", "On Deck"),
+            Map.entry("Implement", "Implement"),
+            Map.entry("Ready to Test", "Implement"),
+            Map.entry("Testing", "Validate"),
+            Map.entry("Revisions Pending", "Validate"),
+            Map.entry("Ready to Release", "Validate"),
+            Map.entry("Ready to Demo", "Validate"),
+            Map.entry("Releasing", "Release"),
+            Map.entry("User Verification", "Verify"),
+            Map.entry("Verified", "Verify"));
+
+    /** Custom within-column group order (status → ordinal); others fall back to workflow rank. */
+    private static final Map<String, Integer> GROUP_ORDER = Map.of(
+            "Revisions Pending", 0,
+            "Ready to Release", 1,
+            "Ready to Demo", 2,
+            "Testing", 3);
 
     /** Kanban view of a board's active items (no backlog, no resolved), grouped into columns. */
     private void kanban(Context ctx) {

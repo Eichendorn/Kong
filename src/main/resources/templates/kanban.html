@@ -50,6 +50,7 @@
                                     <span class="kanban-key-wrap">
                                         <span class="mini-key" th:text="${i.key()}">KEY-1</span>
                                         <button th:replace="~{fragments/icons :: copyLink(${jiraBaseUrl} + '/browse/' + ${i.key()}, ${i.key()})}"></button>
+                                        <button th:replace="~{fragments/icons :: openJira(${jiraBaseUrl} + '/browse/' + ${i.key()})}"></button>
                                     </span>
                                     <span class="kanban-card-top-right">
                                         <span class="status kanban-status" th:if="${i.status() != c.status()}"
@@ -102,17 +103,24 @@
 </div>
 
 <script>
-    // Single click selects a card (subtle orange outline), clearing any prior one.
+    function clearSelection() {
+        document.querySelectorAll('.kanban-card.selected')
+                .forEach(function (c) { c.classList.remove('selected'); });
+    }
+    // Single click toggles selection: select a card (subtle orange outline),
+    // or unselect it if it's already the selected one.
     function selectCard(el) {
         var card = el && el.closest('.kanban-card');
         if (!card) return;
-        document.querySelectorAll('.kanban-card.selected')
-                .forEach(function (c) { c.classList.remove('selected'); });
-        card.classList.add('selected');
+        var wasSelected = card.classList.contains('selected');
+        clearSelection();
+        if (!wasSelected) card.classList.add('selected');
     }
-    // Double click opens the detail modal (and keeps the card selected).
+    // Double click opens the detail modal and leaves the card selected.
     function openIssueModal(el) {
-        selectCard(el);
+        var card = el && el.closest('.kanban-card');
+        clearSelection();
+        if (card) card.classList.add('selected');
         var key = el && el.getAttribute('data-key');
         var link = document.getElementById('modal-open-tab');
         if (link && key) link.href = '/issue/' + key;
