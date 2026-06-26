@@ -112,7 +112,7 @@ h1 { font-size: 20px; margin: 0 0 4px; }
     gap: 18px; margin-bottom: 14px; }
 .kanban-head h1 { margin: 0; }
 .kanban { display: flex; gap: 12px; align-items: flex-start; overflow-x: auto; padding-bottom: 12px; }
-.kanban-col { flex: 0 0 280px; background: var(--panel); border: 1px solid var(--border);
+.kanban-col { flex: 1 1 0; min-width: 240px; background: var(--panel); border: 1px solid var(--border);
     border-radius: 10px; padding: 10px; display: flex; flex-direction: column;
     max-height: calc(100vh - 170px); }
 .kanban-col-head { display: flex; align-items: center; justify-content: space-between;
@@ -138,12 +138,15 @@ h1 { font-size: 20px; margin: 0 0 4px; }
     display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
 .modal-overlay[hidden] { display: none; }
 .modal-box { width: 100%; max-width: 920px; }
-.modal-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.modal-bar-left { display: inline-flex; align-items: center; gap: 10px; }
+/* Floats in the top-left gutter (mirrors the close X top-right); never off screen. */
+.modal-bar { position: fixed; top: 26px; z-index: 110;
+    right: min(calc(50% + 460px + 12px), calc(100% - 130px));
+    display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .modal-jump, .modal-open-tab { background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
-    border-radius: 6px; padding: 5px 12px; font-size: 13px; cursor: pointer; }
+    border-radius: 6px; padding: 5px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .modal-jump:hover, .modal-open-tab:hover { background: var(--border); filter: none; text-decoration: none; }
-.modal-close { width: 32px; height: 32px; border-radius: 50%; padding: 0; position: relative;
+.modal-close { width: 32px; height: 32px; border-radius: 50%; padding: 0; z-index: 110;
+    position: fixed; top: 26px; left: min(calc(50% + 460px + 12px), calc(100% - 56px));
     font-size: 0; background: var(--panel-2); color: var(--text);
     border: 1px solid var(--border); cursor: pointer; }
 /* Draw the X with two bars so it's perfectly centred regardless of font metrics. */
@@ -159,10 +162,10 @@ h1 { font-size: 20px; margin: 0 0 4px; }
     background: var(--accent); color: #fff; border: 1px solid var(--accent);
     box-shadow: 0 4px 14px rgba(0, 0, 0, .4); }
 .modal-top:hover { filter: brightness(1.1); }
-.kanban-card-top { display: flex; justify-content: space-between; align-items: center;
-    gap: 8px; font-size: 12px; margin-bottom: 6px; }
-.kanban-key-wrap { display: inline-flex; align-items: center; gap: 3px; }
-.kanban-card-top-right { display: inline-flex; align-items: center; gap: 6px; }
+.kanban-card-top { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 6px; }
+/* Keep the whole row on one line: the KEY group never shrinks; the status truncates instead. */
+.kanban-key-wrap { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; white-space: nowrap; }
+.kanban-card-top-right { display: flex; align-items: center; gap: 6px; margin-left: auto; min-width: 0; }
 
 /* Copy-Jira-link icon button (detail header + kanban cards) */
 .copy-link, .open-jira { position: relative; display: inline-flex; align-items: center; background: none;
@@ -173,8 +176,9 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .detail-head h1 .copy-link svg, .detail-head h1 .open-jira svg { width: 16px; height: 16px; }
 .copy-link.copied { color: #84cc16; }
 .copy-link.copied-mgr { color: #f5a623; }
-.kanban-card-top-right .badge { padding: 1px 6px; font-size: 11px; }
-.kanban-status { font-size: 10px; padding: 1px 7px; white-space: nowrap; }
+.kanban-card-top-right .badge { padding: 1px 6px; font-size: 11px; flex-shrink: 0; }
+.kanban-status { font-size: 10px; padding: 1px 7px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .kanban-type { color: var(--muted); white-space: nowrap; }
 .kanban-card-summary { font-size: 13px; line-height: 1.35; }
 .kanban-tester { font-size: 12px; margin-top: 6px; color: var(--text); }
@@ -287,7 +291,7 @@ body.issue-body .topbar { flex: 0 0 auto; }
 .mini-list li.selected { display: block; }
 .mini-list li.selected a { background: var(--accent); color: #fff; }
 .mini-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.mini-key { font-size: 11px; color: #8ce0a8; letter-spacing: .02em; }
+.mini-key { font-size: 11px; color: #8ce0a8; letter-spacing: .02em; white-space: nowrap; }
 .mini-status { font-size: 10px; padding: 1px 6px; white-space: nowrap; }
 .mini-list li.selected .mini-key { color: #e8efff; }
 .mini-summary { display: block; font-size: 13px; line-height: 1.3; }
