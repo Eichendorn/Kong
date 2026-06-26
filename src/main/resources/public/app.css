@@ -122,11 +122,16 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .kanban-col.over-wip { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
 .kanban-cards { overflow-y: auto; display: flex; flex-direction: column; }
 .kanban-group-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.kanban-group-sep { height: 2px; background: #e6dca0; opacity: .7; border-radius: 1px; margin: 12px 4px; }
+.kanban-group-sep { display: flex; align-items: center; gap: 8px; margin: 12px 4px 4px; }
+.kanban-group-sep::after { content: ""; flex: 1; height: 2px; border-radius: 1px;
+    background: #e6dca0; opacity: .7; }
+.kanban-group-label { font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
+    color: #e6dca0; white-space: nowrap; }
 .kanban-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; }
 .kanban-card a { display: block; padding: 10px; color: var(--text); text-decoration: none; }
 .kanban-card a:hover { background: var(--border); border-radius: 8px; }
 .kanban-card.highlighted { border-color: var(--accent); }
+.kanban-card.selected { border-color: #f5a623; }
 
 /* Issue detail modal (Kanban) */
 .modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, .55);

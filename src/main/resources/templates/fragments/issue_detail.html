@@ -72,6 +72,8 @@
                       th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/devtester'}"
                       hx-target="closest dd" hx-swap="innerHTML"
                       th:text="${issue.devTesterDisplay()}">Dev Tester</span></dd>
+            <dt>Release Authorized By</dt>
+            <dd th:text="${issue.releaseAuthorizedByDisplay()}">—</dd>
             <dt>Dev Checklists</dt>
             <dd>
                 <span th:if="${issue.checklistsComplete()}" class="badge badge-yes">Complete</span>

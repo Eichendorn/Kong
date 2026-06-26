@@ -36,13 +36,16 @@
             </header>
             <div class="kanban-cards">
                 <div class="kanban-group" th:each="g, gs : ${c.groups()}">
-                    <div class="kanban-group-sep" th:unless="${gs.first}"></div>
+                    <div class="kanban-group-sep" th:if="${c.groups().size() > 1}">
+                        <span class="kanban-group-label" th:text="${g.status()}">Status</span>
+                    </div>
                     <ul class="kanban-group-list">
                         <li class="kanban-card" th:each="i : ${g.issues()}"
                             th:classappend="${i.key() == highlight} ? 'highlighted' : ''">
-                            <a href="#" onclick="openIssueModal(this); return false;"
+                            <a href="#" onclick="selectCard(this); return false;"
+                               ondblclick="openIssueModal(this); return false;"
                                th:attr="hx-get=@{'/issue/' + ${i.key()} + '/detail'}, data-key=${i.key()}"
-                               hx-target="#issue-modal-body" hx-swap="innerHTML">
+                               hx-trigger="dblclick" hx-target="#issue-modal-body" hx-swap="innerHTML">
                                 <div class="kanban-card-top">
                                     <span class="kanban-key-wrap">
                                         <span class="mini-key" th:text="${i.key()}">KEY-1</span>
@@ -99,7 +102,17 @@
 </div>
 
 <script>
+    // Single click selects a card (subtle orange outline), clearing any prior one.
+    function selectCard(el) {
+        var card = el && el.closest('.kanban-card');
+        if (!card) return;
+        document.querySelectorAll('.kanban-card.selected')
+                .forEach(function (c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
+    }
+    // Double click opens the detail modal (and keeps the card selected).
     function openIssueModal(el) {
+        selectCard(el);
         var key = el && el.getAttribute('data-key');
         var link = document.getElementById('modal-open-tab');
         if (link && key) link.href = '/issue/' + key;

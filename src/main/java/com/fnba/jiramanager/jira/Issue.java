@@ -25,6 +25,7 @@ public record Issue(
         String devTester,
         List<JiraUser> devTesterUsers,
         String reporter,
+        String releaseAuthorizedBy,
         String priority,
         Double storyPoints,
         List<Link> devChecklists,
@@ -47,6 +48,8 @@ public record Issue(
     public static final String SPEC_DETAIL_FIELD = "customfield_10075";
     /** Reason for Tracking — a plain-text field on fnba.atlassian.net. */
     public static final String REASON_FOR_TRACKING_FIELD = "customfield_13467";
+    /** Release Authorized By — a single user-picker field on fnba.atlassian.net. */
+    public static final String RELEASE_AUTHORIZED_BY_FIELD = "customfield_13330";
 
     /** A hyperlink pulled out of a rich-text field (e.g. the Developer Checklists links). */
     public record Link(String text, String href) {}
@@ -81,6 +84,7 @@ public record Issue(
                 extractUserNames(f.path(DEV_TESTER_FIELD)),
                 extractUsers(f.path(DEV_TESTER_FIELD)),
                 f.path("reporter").path("displayName").asText(""),
+                f.path(RELEASE_AUTHORIZED_BY_FIELD).path("displayName").asText(""),
                 f.path("priority").path("name").asText(""),
                 points,
                 extractLinks(f.path(DEV_CHECKLISTS_FIELD)),
@@ -159,7 +163,7 @@ public record Issue(
     /** A copy with changelog-derived timing overlaid (exact status-since and board-since). */
     public Issue withTiming(Instant statusSince, Instant boardSince) {
         return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
-                devTester, devTesterUsers, reporter, priority, storyPoints, devChecklists,
+                devTester, devTesterUsers, reporter, releaseAuthorizedBy, priority, storyPoints, devChecklists,
                 reasonForTracking, specDetail, descriptionText, updated, statusSince, categorySince,
                 boardSince, checklistsComplete, raw);
     }
@@ -222,6 +226,11 @@ public record Issue(
     /** Comma-separated Dev Tester names, or an em dash when none are set. */
     public String devTesterDisplay() {
         return (devTester == null || devTester.isBlank()) ? "—" : devTester;
+    }
+
+    /** Release Authorized By name, or an em dash when unset. */
+    public String releaseAuthorizedByDisplay() {
+        return (releaseAuthorizedBy == null || releaseAuthorizedBy.isBlank()) ? "—" : releaseAuthorizedBy;
     }
 
     /** Join the displayName of every user in a multi-user picker array field. */
