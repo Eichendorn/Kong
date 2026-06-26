@@ -105,11 +105,17 @@
         document.querySelectorAll('.kanban-card.selected')
                 .forEach(function (c) { c.classList.remove('selected'); });
     }
+    // The blue highlight marks the card you returned from; any card click dismisses it.
+    function clearHighlight() {
+        document.querySelectorAll('.kanban-card.highlighted')
+                .forEach(function (c) { c.classList.remove('highlighted'); });
+    }
     // Single click toggles selection: select a card (subtle orange outline),
     // or unselect it if it's already the selected one.
     function selectCard(el) {
         var card = el && el.closest('.kanban-card');
         if (!card) return;
+        clearHighlight();
         var wasSelected = card.classList.contains('selected');
         clearSelection();
         if (!wasSelected) card.classList.add('selected');
@@ -117,6 +123,7 @@
     // Double click opens the detail modal and leaves the card selected.
     function openIssueModal(el) {
         var card = el && el.closest('.kanban-card');
+        clearHighlight();
         clearSelection();
         if (card) card.classList.add('selected');
         var key = el && el.getAttribute('data-key');
