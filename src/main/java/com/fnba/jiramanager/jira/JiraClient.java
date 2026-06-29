@@ -61,6 +61,13 @@ public class JiraClient {
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
     private static final long LIST_TTL_MS = 60_000;     // board + sidebar issue lists
     private static final long META_TTL_MS = 600_000;    // priorities, resolutions, create-meta
+    /**
+     * Hard cap on cached entries. Each distinct key is kept until overwritten,
+     * and {@code /search?jql=...} mints a new key per unique query, so without a
+     * bound the map grows forever. Past this size we sweep expired entries, then
+     * evict the soonest-to-expire ones until back under the cap.
+     */
+    private static final int MAX_CACHE_ENTRIES = 500;
 
     @SuppressWarnings("unchecked")
     private <T> T cached(String key, long ttlMs, Supplier<T> loader) {
@@ -69,7 +76,21 @@ public class JiraClient {
         if (e != null && e.expiresAt() > now) return (T) e.value();
         T v = loader.get();
         cache.put(key, new Cached(v, now + ttlMs));
+        if (cache.size() > MAX_CACHE_ENTRIES) evict(now);
         return v;
+    }
+
+    /** Reap expired entries; if still over the cap, drop the soonest-to-expire ones. */
+    private void evict(long now) {
+        cache.entrySet().removeIf(en -> en.getValue().expiresAt() <= now);
+        int over = cache.size() - MAX_CACHE_ENTRIES;
+        if (over <= 0) return;
+        cache.entrySet().stream()
+                .sorted(Comparator.comparingLong(en -> en.getValue().expiresAt()))
+                .limit(over)
+                .map(Map.Entry::getKey)
+                .toList()
+                .forEach(cache::remove);
     }
 
     /** Drop cached issue lists so the next board/sidebar load reflects a write. */
