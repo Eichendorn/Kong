@@ -617,7 +617,19 @@ public class Routes {
     private void doStoryPoints(Context ctx) {
         String key = ctx.pathParam("key");
         String raw = ctx.formParam("points");
-        Double points = (raw == null || raw.isBlank()) ? null : Double.parseDouble(raw.trim());
+        Double points = null;
+        if (raw != null && !raw.isBlank()) {
+            try {
+                points = Double.parseDouble(raw.trim());
+            } catch (NumberFormatException e) {
+                // Mapped to a clean error fragment; a raw parse would 500 unhandled.
+                throw new IllegalStateException("Story points must be a number (got \""
+                        + raw.trim() + "\").");
+            }
+            if (points < 0) {
+                throw new IllegalStateException("Story points can't be negative.");
+            }
+        }
         jira.setStoryPoints(key, points);
         renderDetailFragment(ctx, key);
     }
