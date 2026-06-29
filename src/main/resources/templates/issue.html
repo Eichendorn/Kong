@@ -40,13 +40,14 @@
             <form method="post"
                   th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/claude'}"
                   hx-target="#claude-runs" hx-swap="outerHTML">
-                <input type="text" name="command" class="claude-cmd"
-                       value="/developer-checklists-setup"
-                       placeholder="/skill or free-text prompt"/>
+                <select name="command" class="claude-cmd">
+                    <option th:each="s : ${allowedSkills}" th:value="${s}" th:text="${s}">/skill</option>
+                </select>
                 <button type="submit">Run on this issue</button>
             </form>
-            <p class="muted">Runs <code>claude -p "&lt;command&gt; <span th:text="${issue.key()}">KEY-1</span>"</code>
-                server-side. Also auto-fires when an issue moves to <em>In Progress</em>.</p>
+            <p class="muted">Runs <code>claude -p "&lt;skill&gt; <span th:text="${issue.key()}">KEY-1</span>"</code>
+                server-side, restricted to the allowlisted skills above. Also auto-fires
+                when an issue moves to <em>In Progress</em>.</p>
 
             <div th:replace="~{fragments/claude_runs :: runs}"></div>
         </section>

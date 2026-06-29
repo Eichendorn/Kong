@@ -35,6 +35,22 @@ public class ClaudeService {
     private final long bootMillis;
 
     /**
+     * The only skills this service will launch. The {@code command} a caller
+     * passes must match one of these EXACTLY (after trimming) — no free-text
+     * prompts, no extra arguments. The endpoint is unauthenticated and runs
+     * {@code claude} with {@code --permission-mode acceptEdits} against the whole
+     * working tree, so anything outside this set is refused before it reaches the
+     * CLI. Keep the transition-hook command ({@link #transitionHooks}) in here.
+     */
+    public static final List<String> ALLOWED_SKILLS = List.of(
+            "/developer-checklists-setup",
+            "/create-task-gameplan",
+            "/create-release-plan",
+            "/create-developer-notes",
+            "/create-developer-reminders",
+            "/replace-smart-checklist");
+
+    /**
      * Status name -> skill command to auto-run when an issue transitions into it.
      * Keys are matched case-insensitively against the target status.
      */
@@ -52,14 +68,31 @@ public class ClaudeService {
         return bootMillis + System.nanoTime() / 1_000_000L;
     }
 
+    /** The skills the UI may offer / the service will run, in display order. */
+    public List<String> allowedSkills() {
+        return ALLOWED_SKILLS;
+    }
+
     /**
-     * Launch a skill against an issue. {@code command} is the prompt handed to
-     * {@code claude -p}, e.g. {@code "/developer-checklists-setup"} or free text.
-     * The issue key is appended so the skill knows its target.
+     * Launch a skill against an issue. {@code command} must be one of
+     * {@link #ALLOWED_SKILLS} exactly (after trimming); the issue key is appended
+     * so the skill knows its target. Anything else is refused and recorded as a
+     * FAILED run (so the UI shows why) rather than executed.
      */
     public ClaudeRun runSkill(String issueKey, String command) {
+        String skill = command == null ? "" : command.strip();
         String id = "run-" + seq.incrementAndGet();
-        String prompt = command.strip() + " " + issueKey;
+        if (!ALLOWED_SKILLS.contains(skill)) {
+            ClaudeRun rejected = new ClaudeRun(id, issueKey,
+                    skill.isEmpty() ? "(no command)" : skill, now());
+            rejected.status = ClaudeRun.Status.FAILED;
+            rejected.exitCode = -1;
+            rejected.output = "Rejected: not an allowed skill.\nPermitted: "
+                    + String.join(", ", ALLOWED_SKILLS);
+            runs.put(id, rejected);
+            return rejected;
+        }
+        String prompt = skill + " " + issueKey;
         ClaudeRun run = new ClaudeRun(id, issueKey, prompt, now());
         runs.put(id, run);
         pool.submit(() -> execute(run, prompt));

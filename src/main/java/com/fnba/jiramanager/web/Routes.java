@@ -442,6 +442,7 @@ public class Routes {
         model.put("comments", join(commsF));
         model.put("runs", claude.forIssue(key));
         model.put("sidebarIssues", join(sidebarF));
+        model.put("allowedSkills", claude.allowedSkills());
         ctx.render("issue.html", model);
     }
 
