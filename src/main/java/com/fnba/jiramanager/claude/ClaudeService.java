@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,6 +47,9 @@ public class ClaudeService {
      * pipeline is the longest legitimate run and finishes well inside it.
      */
     private static final long RUN_TIMEOUT_MS = 20 * 60 * 1000L;
+
+    /** Most claude runs to retain in memory; oldest finished ones are evicted past this. */
+    private static final int MAX_RUNS = 200;
 
     /** One daemon thread that force-kills overrunning claude processes. */
     private final ScheduledExecutorService watchdogs =
@@ -110,14 +114,32 @@ public class ClaudeService {
             rejected.exitCode = -1;
             rejected.output = "Rejected: not an allowed skill.\nPermitted: "
                     + String.join(", ", ALLOWED_SKILLS);
-            runs.put(id, rejected);
+            record(rejected);
             return rejected;
         }
         String prompt = skill + " " + issueKey;
         ClaudeRun run = new ClaudeRun(id, issueKey, prompt, now());
-        runs.put(id, run);
+        record(run);
         pool.submit(() -> execute(run, prompt));
         return run;
+    }
+
+    /**
+     * Register a run, then bound the history. Every run — including rejected
+     * ones — was previously retained for the life of the process, each holding
+     * its full captured output; over a long uptime that is an unbounded heap
+     * leak. Keep at most {@link #MAX_RUNS}, evicting the oldest FINISHED runs
+     * first and never dropping one that is still RUNNING.
+     */
+    private void record(ClaudeRun run) {
+        runs.put(run.id, run);
+        int over = runs.size() - MAX_RUNS;
+        if (over <= 0) return;
+        runs.values().stream()
+                .filter(r -> r.status != ClaudeRun.Status.RUNNING)
+                .sorted(Comparator.comparingLong(r -> r.startedAtMillis))
+                .limit(over)
+                .forEach(r -> runs.remove(r.id));
     }
 
     /** Called after a successful transition; fires a hook skill if one is configured. */
