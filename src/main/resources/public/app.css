@@ -185,6 +185,10 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .kanban-tester-label { color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
     font-size: 10px; margin-right: 5px; }
 .kanban-tester-name { color: #e6dca0; }
+.kanban-reporter { font-size: 12px; margin-top: 6px; color: var(--text); }
+.kanban-reporter-name { color: #9ec5ff; }
+.kanban-reason { font-size: 12px; margin-top: 6px; color: var(--text); }
+.kanban-reason-text { color: #d9b3ff; }
 .kanban-assignee { color: #8ce0a8; }
 .kanban-card-foot { display: flex; justify-content: space-between; align-items: center;
     gap: 8px; margin-top: 8px; font-size: 11px; color: var(--muted); }
@@ -264,6 +268,8 @@ td.chk .badge { padding: 1px 6px; }
 .status.sc-new { background: #3a3d44; }
 .status.sc-indeterminate { background: #2a3a52; color: #9ec1ff; }
 .status.sc-done { background: #1f3a2a; color: #8ce0a8; }
+/* Ready to Release: flag the card's status pill red, consistent with --red. */
+.status.status-rtr { background: #3a1f1f; color: #ff9b9b; }
 
 .badge { padding: 2px 9px; border-radius: 10px; font-size: 12px; }
 .badge-yes { background: #1f3a2a; color: #8ce0a8; }

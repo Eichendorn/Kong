@@ -54,7 +54,7 @@
                                     </span>
                                     <span class="kanban-card-top-right">
                                         <span class="status kanban-status" th:if="${i.status() != c.status()}"
-                                              th:classappend="'sc-' + ${i.statusCategory()}"
+                                              th:classappend="'sc-' + ${i.statusCategory()} + (${i.status() == 'Ready to Release'} ? ' status-rtr' : '')"
                                               th:text="${i.status()}">Status</span>
                                         <span th:if="${i.checklistsComplete()}" class="badge badge-yes"
                                               title="Checklists complete">✓</span>
@@ -67,6 +67,14 @@
                                      th:if="${i.status() == 'Ready to Test' or i.status() == 'Testing' or i.status() == 'Revisions Pending'}">
                                     <span class="kanban-tester-label">Tester</span>
                                     <span class="kanban-tester-name" th:text="${i.devTesterDisplay()}">Name</span>
+                                </div>
+                                <div class="kanban-reporter" th:if="${i.status() == 'User Verification' or i.status() == 'Ready to Demo'}">
+                                    <span class="kanban-tester-label">Reporter</span>
+                                    <span class="kanban-reporter-name" th:text="${i.reporter()}">Name</span>
+                                </div>
+                                <div class="kanban-reason" th:if="${i.status() == 'Track'}">
+                                    <span class="kanban-tester-label">Reason</span>
+                                    <span class="kanban-reason-text" th:text="${i.reasonForTrackingDisplay()}">Reason</span>
                                 </div>
                                 <div class="kanban-card-foot">
                                     <span class="kanban-type" th:text="${i.issueType()}">Type</span>

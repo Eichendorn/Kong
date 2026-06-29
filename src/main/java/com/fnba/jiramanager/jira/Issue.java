@@ -233,6 +233,11 @@ public record Issue(
         return (releaseAuthorizedBy == null || releaseAuthorizedBy.isBlank()) ? "—" : releaseAuthorizedBy;
     }
 
+    /** Reason for Tracking text, or an em dash when unset. */
+    public String reasonForTrackingDisplay() {
+        return (reasonForTracking == null || reasonForTracking.isBlank()) ? "—" : reasonForTracking;
+    }
+
     /** Join the displayName of every user in a multi-user picker array field. */
     private static String extractUserNames(JsonNode arr) {
         if (arr == null || !arr.isArray() || arr.isEmpty()) return "";
