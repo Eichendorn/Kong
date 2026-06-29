@@ -180,7 +180,9 @@ public class JiraClient {
      * issues and pulls out every {@code status} change. Cached briefly.
      */
     public List<TransitionLog> recentTransitions(String jql, int maxIssues) {
-        return cached("txnlog:" + maxIssues + ":" + jql, LIST_TTL_MS,
+        // "list:" prefix so invalidateLists() sweeps it on a write — a transition
+        // you just made should show up in the log immediately, not 60s later.
+        return cached("list:txnlog:" + maxIssues + ":" + jql, LIST_TTL_MS,
                 () -> doRecentTransitions(jql, maxIssues));
     }
 
