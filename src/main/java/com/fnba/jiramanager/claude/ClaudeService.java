@@ -11,6 +11,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -33,6 +37,23 @@ public class ClaudeService {
     private final Map<String, ClaudeRun> runs = new ConcurrentHashMap<>();
     private final AtomicLong seq = new AtomicLong();
     private final long bootMillis;
+
+    /**
+     * Hard cap on a single claude run. The pool only has two threads, so a run
+     * that hangs — whether blocked producing no output or simply never exiting —
+     * would otherwise pin a thread forever and eventually starve the feature. A
+     * watchdog force-kills any process that overruns this; the dev-checklists
+     * pipeline is the longest legitimate run and finishes well inside it.
+     */
+    private static final long RUN_TIMEOUT_MS = 20 * 60 * 1000L;
+
+    /** One daemon thread that force-kills overrunning claude processes. */
+    private final ScheduledExecutorService watchdogs =
+            Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "claude-watchdog");
+                t.setDaemon(true);
+                return t;
+            });
 
     /**
      * The only skills this service will launch. The {@code command} a caller
@@ -121,6 +142,9 @@ public class ClaudeService {
     }
 
     private void execute(ClaudeRun run, String prompt) {
+        Process proc = null;
+        ScheduledFuture<?> watchdog = null;
+        AtomicBoolean timedOut = new AtomicBoolean(false);
         try {
             ProcessBuilder pb = new ProcessBuilder(
                     claudeBin, "-p", prompt,
@@ -128,7 +152,18 @@ public class ClaudeService {
                     .directory(new File("/workspace"))
                     .redirectInput(ProcessBuilder.Redirect.from(new File("/dev/null")))
                     .redirectErrorStream(true);
-            Process proc = pb.start();
+            proc = pb.start();
+            final Process p = proc;
+            // Force-kill on overrun. Destroying the process closes its output
+            // stream, so the reader loop below unblocks and we fall through to
+            // waitFor() — covering both the silent-hang and never-exit cases.
+            watchdog = watchdogs.schedule(() -> {
+                if (p.isAlive()) {
+                    timedOut.set(true);
+                    p.destroyForcibly();
+                }
+            }, RUN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
             StringBuilder sb = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
@@ -140,10 +175,19 @@ public class ClaudeService {
             }
             int code = proc.waitFor();
             run.exitCode = code;
-            run.status = code == 0 ? ClaudeRun.Status.SUCCESS : ClaudeRun.Status.FAILED;
+            if (timedOut.get()) {
+                run.output = sb + "\n[timed out after " + (RUN_TIMEOUT_MS / 60_000)
+                        + " min — process killed]";
+                run.status = ClaudeRun.Status.FAILED;
+            } else {
+                run.status = code == 0 ? ClaudeRun.Status.SUCCESS : ClaudeRun.Status.FAILED;
+            }
         } catch (Exception e) {
+            if (proc != null) proc.destroyForcibly();
             run.output = run.output + "\n[launcher error] " + e.getMessage();
             run.status = ClaudeRun.Status.FAILED;
+        } finally {
+            if (watchdog != null) watchdog.cancel(false);
         }
     }
 }
