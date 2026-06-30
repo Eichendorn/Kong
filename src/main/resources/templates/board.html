@@ -17,6 +17,11 @@
         <code>config.local.properties</code> and add your API token, then restart.
     </div>
 
+    <div th:if="${truncated}" class="banner">
+        Showing the first <span th:text="${resultCap}">500</span> matches — this board has more
+        than that, so some items are hidden. Narrow the JQL to see the rest.
+    </div>
+
     <h1 th:text="${title}">Board</h1>
     <p class="jql" th:text="${jql}">jql</p>
 

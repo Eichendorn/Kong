@@ -38,6 +38,7 @@ public class JiraClient {
     private final ObjectMapper mapper = new ObjectMapper();
     private final String baseUrl;
     private final String authHeader;
+    private static final System.Logger LOG = System.getLogger(JiraClient.class.getName());
 
     /** Story Points custom field on fnba.atlassian.net (see project memory). */
     public static final String STORY_POINTS_FIELD = "customfield_10016";
@@ -100,12 +101,15 @@ public class JiraClient {
 
     // ---- Reads -------------------------------------------------------------
 
+    /** Issues from a search, plus whether the {@code maxResults} cap hid further matches. */
+    public record SearchResult(List<Issue> issues, boolean truncated) {}
+
     /** Run a JQL search and return up to {@code maxResults} issues, paginating as needed. */
-    public List<Issue> search(String jql, int maxResults) {
+    public SearchResult search(String jql, int maxResults) {
         return cached("list:full:" + maxResults + ":" + jql, LIST_TTL_MS, () -> doSearch(jql, maxResults));
     }
 
-    private List<Issue> doSearch(String jql, int maxResults) {
+    private SearchResult doSearch(String jql, int maxResults) {
         // Only the fields the board table renders — no changelog (it was ~5x slower
         // over a 500-issue board). The list's "Days in status" uses the cheap
         // statuscategorychangedate; the Kanban fetches exact per-status timing for
@@ -127,15 +131,29 @@ public class JiraClient {
                     + (nextPageToken == null ? "" : "&nextPageToken=" + enc(nextPageToken));
             JsonNode root = get(url);
             JsonNode issues = root.path("issues");
-            if (!issues.isArray() || issues.isEmpty()) break;
+            if (!issues.isArray() || issues.isEmpty()) { nextPageToken = null; break; }
             for (JsonNode n : issues) {
                 out.add(Issue.from(n, STORY_POINTS_FIELD));
             }
-            JsonNode token = root.path("nextPageToken");
-            if (token.isMissingNode() || token.isNull() || token.asText("").isEmpty()) break;
-            nextPageToken = token.asText();
+            nextPageToken = nextToken(root);
+            if (nextPageToken == null) break;
         }
-        return out;
+        // We stopped either because Jira ran out of pages (token null) or because
+        // we hit the cap with a page still pending — the latter means matches were
+        // dropped, which would otherwise make a partial board look complete.
+        boolean truncated = out.size() >= maxResults && nextPageToken != null;
+        if (truncated) {
+            LOG.log(System.Logger.Level.WARNING,
+                    "Search hit the " + maxResults + "-result cap; later matches are hidden. JQL: " + jql);
+        }
+        return new SearchResult(out, truncated);
+    }
+
+    /** The opaque next-page token from a search response, or null when there are no more pages. */
+    private static String nextToken(JsonNode root) {
+        JsonNode token = root.path("nextPageToken");
+        if (token.isMissingNode() || token.isNull() || token.asText("").isEmpty()) return null;
+        return token.asText();
     }
 
     /**
@@ -160,11 +178,14 @@ public class JiraClient {
                     + (nextPageToken == null ? "" : "&nextPageToken=" + enc(nextPageToken));
             JsonNode root = get(url);
             JsonNode issues = root.path("issues");
-            if (!issues.isArray() || issues.isEmpty()) break;
+            if (!issues.isArray() || issues.isEmpty()) { nextPageToken = null; break; }
             for (JsonNode n : issues) out.add(Issue.from(n, STORY_POINTS_FIELD));
-            JsonNode token = root.path("nextPageToken");
-            if (token.isMissingNode() || token.isNull() || token.asText("").isEmpty()) break;
-            nextPageToken = token.asText();
+            nextPageToken = nextToken(root);
+            if (nextPageToken == null) break;
+        }
+        if (out.size() >= maxResults && nextPageToken != null) {
+            LOG.log(System.Logger.Level.WARNING,
+                    "Sidebar search hit the " + maxResults + "-result cap. JQL: " + jql);
         }
         return out;
     }

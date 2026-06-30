@@ -18,6 +18,11 @@
         <code>config.local.properties</code> and restart.
     </div>
 
+    <div th:if="${truncated}" class="banner">
+        The underlying board has more than <span th:text="${resultCap}">500</span> issues, so
+        some may be missing from these columns. Narrow the JQL to be sure nothing is hidden.
+    </div>
+
     <div class="kanban-head">
         <h1 th:text="${title}">Kanban</h1>
         <a class="view-toggle" th:href="@{'/board/' + ${boardSlug}}">LIST</a>

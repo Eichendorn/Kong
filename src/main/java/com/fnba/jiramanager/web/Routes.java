@@ -197,8 +197,11 @@ public class Routes {
         // Reuses the (cached) board search. Active items only, folded into the
         // configured columns; each column ordered by its earliest workflow status,
         // cards newest-first. A column's colour comes from its lowest-rank status.
-        List<Issue> all = jiraReady() ? jira.search(board.jql(), MAX_RESULTS) : List.<Issue>of();
-        List<Issue> active = all.stream().filter(Issue::isActive).toList();
+        JiraClient.SearchResult res = jiraReady()
+                ? jira.search(board.jql(), MAX_RESULTS) : new JiraClient.SearchResult(List.of(), false);
+        model.put("truncated", res.truncated());
+        model.put("resultCap", MAX_RESULTS);
+        List<Issue> active = res.issues().stream().filter(Issue::isActive).toList();
         // Changelog timing (exact status-since + board-since = Encompass On Deck
         // entry), fetched only for the active cards, overlaid onto each issue.
         Map<String, Timing> timings = jira.issueTimings(
@@ -409,8 +412,11 @@ public class Routes {
         Map<String, Object> model = baseModel(activeSlug);
         model.put("title", title);
         model.put("jql", jql);
-        List<Issue> issues = jiraReady() ? jira.search(jql, MAX_RESULTS) : List.<Issue>of();
-        model.put("issues", sortByStatus(issues));
+        JiraClient.SearchResult res = jiraReady()
+                ? jira.search(jql, MAX_RESULTS) : new JiraClient.SearchResult(List.of(), false);
+        model.put("issues", sortByStatus(res.issues()));
+        model.put("truncated", res.truncated());
+        model.put("resultCap", MAX_RESULTS);
         ctx.render("board.html", model);
     }
 
