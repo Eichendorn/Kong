@@ -11,7 +11,7 @@ jira.token=PASTE_YOUR_API_TOKEN_HERE
 
 # Comma-separated board definitions shown in the UI: label|jql
 # (one entry per pipe-delimited pair, entries separated by ;;)
-jira.boards=MIN - Encompass Work|project = MIN ORDER BY updated DESC;;AOC/DC|project = "Enterprise Applications" ORDER BY updated DESC
+jira.boards=MIN - Encompass Work|project = MIN ORDER BY updated DESC
 
 # Path to the claude CLI used for the Claude integration.
 claude.bin=/workspace/.local/bin/claude

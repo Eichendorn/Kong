@@ -63,7 +63,7 @@ Resolution order: **environment variable → `config.local.properties` → built
 
 **Boards** are `label|jql` pairs joined by `;;`, e.g.:
 ```
-jira.boards=MIN - Encompass Work|project = "MIN" AND issuetype in (Encompass, "Encompass Bug", "Encompass Investigation", Refactor) ORDER BY updated DESC;;AOC/DC|project = EA AND issuetype in (...) ORDER BY updated DESC
+jira.boards=MIN - Encompass Work|project = "MIN" AND issuetype in (Encompass, "Encompass Bug", "Encompass Investigation", Refactor) ORDER BY updated DESC
 ```
 > `MIN` is a reserved JQL word — it must be quoted (`project = "MIN"`).
 

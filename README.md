@@ -23,7 +23,7 @@ sent to the browser.**
 - **java.net.http.HttpClient** — Jira Cloud REST v3 (HTTP Basic auth, server-side)
 
 ## Features at a glance
-- **Boards** — a sortable table per configured board (MIN, AOC/DC), plus ad-hoc JQL search. Backlog and Done rows hidden by default.
+- **Boards** — a sortable table per configured board (MIN), plus ad-hoc JQL search. Backlog and Done rows hidden by default.
 - **Kanban** — active items only, in curated workflow columns with per-column **WIP limits**, status sub-groups, and three day-in-state stats per card. Cards open a detail **modal**.
 - **Issue detail** — inline-edit Type / Assignee / Reporter / Priority / Dev Tester, edit Specification Details (with a formatted preview), Description, Story Points; status transitions (with a resolution prompt for Done/Canceled); comments; work logs.
 - **New Task** — guided creation with a primed Specification Details template and a Compliance field.

@@ -5,7 +5,7 @@ How to use each screen. For routes, config, and internals see [REFERENCE.md](REF
 ## Navigation
 The top bar (on every screen) has:
 - **Brand** (Jira Manager) — home.
-- **Board links** — one per configured board (e.g. *MIN - Encompass Work*, *AOC/DC*).
+- **Board links** — one per configured board (e.g. *MIN - Encompass Work*).
 - **Maintenance ▾** — a dropdown; currently → **Recent Transitions**.
 - **Search box** — run ad-hoc JQL.
 - **⚙ Settings**.
