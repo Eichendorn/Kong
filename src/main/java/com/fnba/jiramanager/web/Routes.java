@@ -78,6 +78,8 @@ public class Routes {
         app.post("/issue/{key}/priority", this::doPriority);
         app.post("/issue/{key}/assignee", this::doAssignee);
         app.post("/issue/{key}/reporter", this::doReporter);
+        app.post("/issue/{key}/releasemanager", this::doReleaseManager);
+        app.post("/issue/{key}/releaseauthorizedby", this::doReleaseAuthorizedBy);
         app.post("/issue/{key}/devtester/add", this::doDevTesterAdd);
         app.post("/issue/{key}/devtester/remove/{accountId}", this::doDevTesterRemove);
         app.post("/issue/{key}/transition", this::doTransition);
@@ -580,6 +582,18 @@ public class Routes {
     private void doReporter(Context ctx) {
         String key = ctx.pathParam("key");
         jira.setReporter(key, ctx.formParam("accountId"));
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doReleaseManager(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.setReleaseManager(key, ctx.formParam("accountId"));
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doReleaseAuthorizedBy(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.setReleaseAuthorizedBy(key, ctx.formParam("accountId"));
         renderDetailFragment(ctx, key);
     }
 

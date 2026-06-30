@@ -73,8 +73,16 @@
                       th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/devtester'}"
                       hx-target="closest dd" hx-swap="innerHTML"
                       th:text="${issue.devTesterDisplay()}">Dev Tester</span></dd>
+            <dt>Release Manager</dt>
+            <dd><span class="inline-edit" title="Click to edit"
+                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/releasemanager'}"
+                      hx-target="closest dd" hx-swap="innerHTML"
+                      th:text="${issue.releaseManagerDisplay()}">Release Manager</span></dd>
             <dt>Release Authorized By</dt>
-            <dd th:text="${issue.releaseAuthorizedByDisplay()}">—</dd>
+            <dd><span class="inline-edit" title="Click to edit"
+                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/releaseauthorizedby'}"
+                      hx-target="closest dd" hx-swap="innerHTML"
+                      th:text="${issue.releaseAuthorizedByDisplay()}">Release Authorized By</span></dd>
             <dt>Dev Checklists</dt>
             <dd>
                 <span th:if="${issue.checklistsComplete()}" class="badge badge-yes">Complete</span>

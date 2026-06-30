@@ -491,6 +491,24 @@ public class JiraClient {
         editFields(key, fields);
     }
 
+    /** Set the Release Manager (single-user custom field; blank clears it). */
+    public void setReleaseManager(String key, String accountId) {
+        setSingleUserField(key, Issue.RELEASE_MANAGER_FIELD, accountId);
+    }
+
+    /** Set the Release Authorized By user (single-user custom field; blank clears it). */
+    public void setReleaseAuthorizedBy(String key, String accountId) {
+        setSingleUserField(key, Issue.RELEASE_AUTHORIZED_BY_FIELD, accountId);
+    }
+
+    /** Set a single-user-picker custom field by accountId; a blank value clears it. */
+    private void setSingleUserField(String key, String fieldId, String accountId) {
+        ObjectNode fields = mapper.createObjectNode();
+        if (notBlank(accountId)) fields.putObject(fieldId).put("accountId", accountId.trim());
+        else fields.putNull(fieldId);
+        editFields(key, fields);
+    }
+
     /** Add a Dev Tester (multi-user field) via an incremental update operation. */
     public void addDevTester(String key, String accountId) {
         updateUserList(key, Issue.DEV_TESTER_FIELD, accountId, true);
