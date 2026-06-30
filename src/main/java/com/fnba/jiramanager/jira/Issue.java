@@ -30,6 +30,7 @@ public record Issue(
         Double storyPoints,
         List<Link> devChecklists,
         String reasonForTracking,
+        String demoScheduledDate,
         String specDetail,
         String descriptionText,
         String updated,
@@ -50,6 +51,8 @@ public record Issue(
     public static final String REASON_FOR_TRACKING_FIELD = "customfield_13467";
     /** Release Authorized By — a single user-picker field on fnba.atlassian.net. */
     public static final String RELEASE_AUTHORIZED_BY_FIELD = "customfield_13330";
+    /** Demo Scheduled Date — a date-picker (yyyy-MM-dd) field on fnba.atlassian.net. */
+    public static final String DEMO_SCHEDULED_DATE_FIELD = "customfield_14601";
 
     /** A hyperlink pulled out of a rich-text field (e.g. the Developer Checklists links). */
     public record Link(String text, String href) {}
@@ -89,6 +92,7 @@ public record Issue(
                 points,
                 extractLinks(f.path(DEV_CHECKLISTS_FIELD)),
                 extractDescription(f.path(REASON_FOR_TRACKING_FIELD)),
+                f.path(DEMO_SCHEDULED_DATE_FIELD).asText(""),
                 extractDescription(f.path(SPEC_DETAIL_FIELD)),
                 extractDescription(f.path("description")),
                 f.path("updated").asText(""),
@@ -164,7 +168,7 @@ public record Issue(
     public Issue withTiming(Instant statusSince, Instant boardSince) {
         return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
                 devTester, devTesterUsers, reporter, releaseAuthorizedBy, priority, storyPoints, devChecklists,
-                reasonForTracking, specDetail, descriptionText, updated, statusSince, categorySince,
+                reasonForTracking, demoScheduledDate, specDetail, descriptionText, updated, statusSince, categorySince,
                 boardSince, checklistsComplete, raw);
     }
 
@@ -236,6 +240,11 @@ public record Issue(
     /** Reason for Tracking text, or an em dash when unset. */
     public String reasonForTrackingDisplay() {
         return (reasonForTracking == null || reasonForTracking.isBlank()) ? "—" : reasonForTracking;
+    }
+
+    /** Demo Scheduled Date (yyyy-MM-dd), or an em dash when unset. */
+    public String demoScheduledDateDisplay() {
+        return (demoScheduledDate == null || demoScheduledDate.isBlank()) ? "—" : demoScheduledDate;
     }
 
     /** Join the displayName of every user in a multi-user picker array field. */

@@ -69,13 +69,17 @@
                                 </div>
                                 <div class="kanban-card-summary" th:text="${i.summary()}">summary</div>
                                 <div class="kanban-tester"
-                                     th:if="${i.status() == 'Ready to Test' or i.status() == 'Testing' or i.status() == 'Revisions Pending'}">
+                                     th:if="${i.status() == 'Implement' or i.status() == 'Ready to Test' or i.status() == 'Testing' or i.status() == 'Revisions Pending'}">
                                     <span class="kanban-tester-label">Tester</span>
                                     <span class="kanban-tester-name" th:text="${i.devTesterDisplay()}">Name</span>
                                 </div>
                                 <div class="kanban-reporter" th:if="${i.status() == 'User Verification' or i.status() == 'Ready to Demo'}">
                                     <span class="kanban-tester-label">Reporter</span>
                                     <span class="kanban-reporter-name" th:text="${i.reporter()}">Name</span>
+                                </div>
+                                <div class="kanban-demo" th:if="${i.status() == 'Ready to Demo'}">
+                                    <span class="kanban-tester-label">Demo</span>
+                                    <span class="kanban-demo-date" th:text="${i.demoScheduledDateDisplay()}">Date</span>
                                 </div>
                                 <div class="kanban-reason" th:if="${i.status() == 'Track'}">
                                     <span class="kanban-tester-label">Reason</span>
