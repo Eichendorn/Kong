@@ -45,13 +45,11 @@ code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-si
     padding: 4px 10px; border-radius: 6px; color: var(--muted);
 }
 .boards a.active, .boards a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
-.search { margin-left: auto; display: flex; gap: 6px; flex: 1; min-width: 280px; max-width: 560px; }
-.search input { flex: 1; }
 .nav-settings { padding: 4px 10px; border-radius: 6px; color: var(--muted); white-space: nowrap; }
 .nav-settings:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 
-/* Nav dropdown menu (Maintenance) */
-.nav-menu { position: relative; }
+/* Nav dropdown menu (Maintenance) — pushed right, with Settings, now search is gone. */
+.nav-menu { position: relative; margin-left: auto; }
 .nav-menu > summary { list-style: none; cursor: pointer; padding: 4px 10px; border-radius: 6px;
     color: var(--muted); white-space: nowrap; }
 .nav-menu > summary::-webkit-details-marker { display: none; }
@@ -251,9 +249,18 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .inline-multiuser .ta-input { min-width: 130px; }
 
 /* Issue table */
-table.issues { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 8px; overflow: hidden; }
+/* The list scrolls inside this box (vertical + horizontal) so the page itself stays put. */
+.issues-scroll { overflow: auto; border-radius: 8px; }
+
+/* Board page fills the viewport exactly: no page scroll, the list takes the
+   leftover height below the header/title/controls and scrolls internally. */
+body.board-page { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+body.board-page .content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+body.board-page .issues-scroll { flex: 1 1 auto; min-height: 0; }
+table.issues { width: 100%; border-collapse: collapse; background: var(--panel); }
 table.issues th, table.issues td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-table.issues th { background: var(--panel-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+table.issues th { background: var(--panel-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+    position: sticky; top: 0; z-index: 1; box-shadow: inset 0 -1px 0 var(--border); }
 table.issues td.summary { white-space: normal; }
 table.issues tbody tr:nth-child(odd) td { background: var(--panel); }
 table.issues tbody tr:nth-child(even) td { background: var(--greenbar); }

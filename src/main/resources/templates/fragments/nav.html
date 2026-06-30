@@ -15,11 +15,6 @@
             <a href="/maintenance/transitions">Recent Transitions</a>
         </div>
     </details>
-    <form class="search" action="/search" method="get">
-        <input type="text" name="jql" placeholder="JQL, e.g. assignee = currentUser() AND statusCategory != Done"
-               th:value="${jql}"/>
-        <button type="submit">Search</button>
-    </form>
     <a class="nav-settings" href="/settings" title="Settings">⚙ Settings</a>
 </header>
 </body>

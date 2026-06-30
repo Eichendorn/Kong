@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/app.css"/>
     <script src="/htmx.min.js"></script>
 </head>
-<body>
+<body class="board-page">
 <div th:replace="~{fragments/nav :: nav}"></div>
 
 <main class="content">
@@ -23,7 +23,6 @@
     </div>
 
     <h1 th:text="${title}">Board</h1>
-    <p class="jql" th:text="${jql}">jql</p>
 
     <div class="board-controls">
         <button onclick="var t=document.querySelector('.issues');t.classList.toggle('show-backlog');this.textContent=t.classList.contains('show-backlog')?'Hide Backlog':'Show Backlog'" type="button">Show Backlog</button>
@@ -32,7 +31,8 @@
         <a class="create-task-btn" th:href="@{/create(board=${activeSlug})}">New Task</a>
     </div>
 
-    <table class="issues" th:if="${!issues.isEmpty()}">
+    <div class="issues-scroll" th:if="${!issues.isEmpty()}">
+    <table class="issues">
         <thead>
         <tr>
             <th>Key</th><th>Summary</th><th>Type</th><th>Status</th>
@@ -60,6 +60,7 @@
         </tr>
         </tbody>
     </table>
+    </div>
 
     <p th:if="${issues.isEmpty()}" class="empty">No issues.</p>
 </main>
