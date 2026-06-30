@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -46,10 +47,25 @@ public final class Settings {
         ObjectNode root = mapper.createObjectNode();
         ObjectNode wip = root.putObject(WIP_KEY);
         wipLimits.forEach(wip::put);
+        // Write to a sibling temp file, then atomically rename it into place, so a
+        // crash mid-write can never leave a half-written settings file that fails
+        // to parse on the next boot. The temp lives in the same directory so the
+        // rename stays on one filesystem (a prerequisite for an atomic move).
+        Path dir = FILE.toAbsolutePath().getParent();
+        Path tmp = null;
         try {
-            Files.writeString(FILE, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root));
+            tmp = Files.createTempFile(dir, "settings", ".tmp");
+            Files.writeString(tmp, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root));
+            try {
+                Files.move(tmp, FILE, StandardCopyOption.ATOMIC_MOVE);
+            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+                Files.move(tmp, FILE, StandardCopyOption.REPLACE_EXISTING);
+            }
+            tmp = null;
         } catch (IOException e) {
             throw new IllegalStateException("Failed to write " + FILE, e);
+        } finally {
+            if (tmp != null) try { Files.deleteIfExists(tmp); } catch (IOException ignore) { /* best effort */ }
         }
     }
 
