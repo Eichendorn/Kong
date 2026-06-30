@@ -12,8 +12,8 @@ _None._
 ### Board exceeds the 500-result cap (`MAX_RESULTS`) — 2026-06-30 (resolved 2026-06-30)
 Resolved by narrowing the board JQL (option 2): the `jira.boards` queries in
 `config.local.properties` now append
-`AND status not in ("Backlog", "Specify", "Specify Done", "Needs Spec Revision", "Done")`.
-The MIN board dropped from 500+ (capped) to ~31 active items, well under the cap,
+`AND status not in ("Backlog", "Specify", "Specify Done", "Needs Spec Revision", "Done", "Canceled")`.
+The MIN board dropped from 500+ (capped) to ~29 active items, well under the cap,
 and the truncation banner no longer fires. `MAX_RESULTS` stays at 500 as a
 safety net; the banner/log (`ad37b7e`) remain to catch any future overflow.
 
