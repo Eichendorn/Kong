@@ -117,7 +117,7 @@ public class JiraClient {
         String fields = "summary,status,issuetype,assignee,reporter,updated,created,statuscategorychangedate,"
                 + Issue.DEV_CHECKLISTS_FIELD + "," + Issue.SMART_CHECKLIST_FIELD
                 + "," + Issue.DEV_TESTER_FIELD + "," + Issue.REASON_FOR_TRACKING_FIELD
-                + "," + Issue.DEMO_SCHEDULED_DATE_FIELD;
+                + "," + Issue.DEMO_SCHEDULED_DATE_FIELD + "," + Issue.RELEASE_MANAGER_FIELD;
         List<Issue> out = new ArrayList<>();
         // The enhanced search endpoint (/search/jql) paginates with an opaque
         // nextPageToken and ignores startAt entirely — using startAt re-fetches

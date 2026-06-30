@@ -191,6 +191,8 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .kanban-reason-text { color: #d9b3ff; }
 .kanban-demo { font-size: 12px; margin-top: 6px; color: var(--text); }
 .kanban-demo-date { color: #f5b97a; }
+.kanban-relmgr { font-size: 12px; margin-top: 6px; color: var(--text); }
+.kanban-relmgr-name { color: #7ad9c5; }
 .kanban-assignee { color: #8ce0a8; }
 .kanban-card-foot { display: flex; justify-content: space-between; align-items: center;
     gap: 8px; margin-top: 8px; font-size: 11px; color: var(--muted); }

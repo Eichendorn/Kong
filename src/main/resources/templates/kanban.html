@@ -81,6 +81,10 @@
                                     <span class="kanban-tester-label">Demo</span>
                                     <span class="kanban-demo-date" th:text="${i.demoScheduledDateDisplay()}">Date</span>
                                 </div>
+                                <div class="kanban-relmgr" th:if="${i.status() == 'Ready to Release'}">
+                                    <span class="kanban-tester-label">Rel Mgr</span>
+                                    <span class="kanban-relmgr-name" th:text="${i.releaseManagerDisplay()}">Name</span>
+                                </div>
                                 <div class="kanban-reason" th:if="${i.status() == 'Track'}">
                                     <span class="kanban-tester-label">Reason</span>
                                     <span class="kanban-reason-text" th:text="${i.reasonForTrackingDisplay()}">Reason</span>

@@ -26,6 +26,7 @@ public record Issue(
         List<JiraUser> devTesterUsers,
         String reporter,
         String releaseAuthorizedBy,
+        String releaseManager,
         String priority,
         Double storyPoints,
         List<Link> devChecklists,
@@ -51,6 +52,8 @@ public record Issue(
     public static final String REASON_FOR_TRACKING_FIELD = "customfield_13467";
     /** Release Authorized By — a single user-picker field on fnba.atlassian.net. */
     public static final String RELEASE_AUTHORIZED_BY_FIELD = "customfield_13330";
+    /** Release Manager — a single user-picker field on fnba.atlassian.net. */
+    public static final String RELEASE_MANAGER_FIELD = "customfield_10191";
     /** Demo Scheduled Date — a date-picker (yyyy-MM-dd) field on fnba.atlassian.net. */
     public static final String DEMO_SCHEDULED_DATE_FIELD = "customfield_14601";
 
@@ -88,6 +91,7 @@ public record Issue(
                 extractUsers(f.path(DEV_TESTER_FIELD)),
                 f.path("reporter").path("displayName").asText(""),
                 f.path(RELEASE_AUTHORIZED_BY_FIELD).path("displayName").asText(""),
+                f.path(RELEASE_MANAGER_FIELD).path("displayName").asText(""),
                 f.path("priority").path("name").asText(""),
                 points,
                 extractLinks(f.path(DEV_CHECKLISTS_FIELD)),
@@ -167,7 +171,7 @@ public record Issue(
     /** A copy with changelog-derived timing overlaid (exact status-since and board-since). */
     public Issue withTiming(Instant statusSince, Instant boardSince) {
         return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
-                devTester, devTesterUsers, reporter, releaseAuthorizedBy, priority, storyPoints, devChecklists,
+                devTester, devTesterUsers, reporter, releaseAuthorizedBy, releaseManager, priority, storyPoints, devChecklists,
                 reasonForTracking, demoScheduledDate, specDetail, descriptionText, updated, statusSince, categorySince,
                 boardSince, checklistsComplete, raw);
     }
@@ -235,6 +239,11 @@ public record Issue(
     /** Release Authorized By name, or an em dash when unset. */
     public String releaseAuthorizedByDisplay() {
         return (releaseAuthorizedBy == null || releaseAuthorizedBy.isBlank()) ? "—" : releaseAuthorizedBy;
+    }
+
+    /** Release Manager name, or an em dash when unset. */
+    public String releaseManagerDisplay() {
+        return (releaseManager == null || releaseManager.isBlank()) ? "—" : releaseManager;
     }
 
     /** Reason for Tracking text, or an em dash when unset. */
