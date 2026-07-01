@@ -25,8 +25,6 @@
     <h1 th:text="${title}">Board</h1>
 
     <div class="board-controls">
-        <button onclick="var t=document.querySelector('.issues');t.classList.toggle('show-backlog');this.textContent=t.classList.contains('show-backlog')?'Hide Backlog':'Show Backlog'" type="button">Show Backlog</button>
-        <button onclick="var t=document.querySelector('.issues');t.classList.toggle('show-done');this.textContent=t.classList.contains('show-done')?'Hide Done':'Show Done'" type="button">Show Done</button>
         <a class="view-toggle" th:href="@{'/kanban/' + ${activeSlug}}">KANBAN</a>
         <a class="create-task-btn" th:href="@{/create(board=${activeSlug})}">New Task</a>
     </div>
@@ -41,7 +39,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="i : ${issues}" th:classappend="${i.rowClass()}">
+        <tr th:each="i : ${issues}">
             <td><a th:href="@{'/issue/' + ${i.key()}(board=${activeSlug})}" th:text="${i.key()}">KEY-1</a></td>
             <td class="summary" th:text="${i.summary()}">summary</td>
             <td th:text="${i.issueType()}">Task</td>

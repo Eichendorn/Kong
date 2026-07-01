@@ -270,10 +270,6 @@ table.issues td.summary { white-space: normal; }
 table.issues tbody tr:nth-child(odd) td { background: var(--panel); }
 table.issues tbody tr:nth-child(even) td { background: var(--greenbar); }
 table.issues tbody tr:hover td { background: var(--panel-2); }
-table.issues tr.done { display: none; }
-table.issues.show-done tr.done { display: table-row; }
-table.issues tr.backlog { display: none; }
-table.issues.show-backlog tr.backlog { display: table-row; }
 td.summary { max-width: 480px; }
 td.pts { text-align: center; }
 td.chk { text-align: center; }

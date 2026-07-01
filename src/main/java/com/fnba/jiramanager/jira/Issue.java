@@ -162,16 +162,6 @@ public record Issue(
         return !"done".equals(statusCategory) && !BACKLOG_STATUSES.contains(status);
     }
 
-    public String rowClass() {
-        StringBuilder sb = new StringBuilder();
-        if ("done".equals(statusCategory)) sb.append("done");
-        if (BACKLOG_STATUSES.contains(status)) {
-            if (!sb.isEmpty()) sb.append(' ');
-            sb.append("backlog");
-        }
-        return sb.toString();
-    }
-
     /** A copy with changelog-derived timing overlaid (exact status-since and board-since). */
     public Issue withTiming(Instant statusSince, Instant boardSince) {
         return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
