@@ -1,8 +1,8 @@
-JIRA MANAGER — STARTUP INSTRUCTIONS
+KONG — STARTUP INSTRUCTIONS
 
 1. Build and start the server (inside Claude Code):
 
-   mvn -q package && setsid java -jar target/jira-manager.jar >server.log 2>&1 </dev/null & disown
+   mvn -q package && setsid java -jar target/kong.jar >server.log 2>&1 </dev/null & disown
 
 2. Start the port-forwarding proxy (PowerShell on Windows host):
 

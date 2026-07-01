@@ -1,10 +1,10 @@
-# Jira Manager — User Guide
+# Kong — User Guide
 
 How to use each screen. For routes, config, and internals see [REFERENCE.md](REFERENCE.md).
 
 ## Navigation
 The top bar (on every screen) has:
-- **Brand** (Jira Manager) — home.
+- **Brand** (Kong) — home.
 - **Board links** — one per configured board (e.g. *MIN - Encompass Work*).
 - **Maintenance ▾** — a dropdown; currently → **Recent Transitions**.
 - **Search box** — run ad-hoc JQL.

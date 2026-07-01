@@ -1,4 +1,4 @@
-package com.fnba.jiramanager.web;
+package com.fnba.kong.web;
 
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;

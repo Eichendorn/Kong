@@ -1,4 +1,4 @@
-package com.fnba.jiramanager.claude;
+package com.fnba.kong.claude;
 
 /**
  * A single invocation of the claude CLI against an issue. Mutable because the

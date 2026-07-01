@@ -1,4 +1,4 @@
-# Jira Manager — Reference
+# Kong — Reference
 
 Routes, configuration, custom-field IDs, architecture, and operational notes.
 For day-to-day usage see [USER_GUIDE.md](USER_GUIDE.md).

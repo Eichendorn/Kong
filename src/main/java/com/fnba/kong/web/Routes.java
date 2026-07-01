@@ -1,17 +1,17 @@
-package com.fnba.jiramanager.web;
+package com.fnba.kong.web;
 
-import com.fnba.jiramanager.claude.ClaudeService;
-import com.fnba.jiramanager.config.BoardDef;
-import com.fnba.jiramanager.config.Config;
-import com.fnba.jiramanager.config.Settings;
-import com.fnba.jiramanager.jira.CreateProject;
-import com.fnba.jiramanager.jira.Issue;
-import com.fnba.jiramanager.jira.JiraClient;
-import com.fnba.jiramanager.jira.JiraUser;
-import com.fnba.jiramanager.jira.Resolution;
-import com.fnba.jiramanager.jira.Timing;
-import com.fnba.jiramanager.jira.Transition;
-import com.fnba.jiramanager.jira.TransitionLog;
+import com.fnba.kong.claude.ClaudeService;
+import com.fnba.kong.config.BoardDef;
+import com.fnba.kong.config.Config;
+import com.fnba.kong.config.Settings;
+import com.fnba.kong.jira.CreateProject;
+import com.fnba.kong.jira.Issue;
+import com.fnba.kong.jira.JiraClient;
+import com.fnba.kong.jira.JiraUser;
+import com.fnba.kong.jira.Resolution;
+import com.fnba.kong.jira.Timing;
+import com.fnba.kong.jira.Transition;
+import com.fnba.kong.jira.TransitionLog;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 

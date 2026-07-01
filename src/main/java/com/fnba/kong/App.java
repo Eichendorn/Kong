@@ -1,10 +1,10 @@
-package com.fnba.jiramanager;
+package com.fnba.kong;
 
-import com.fnba.jiramanager.claude.ClaudeService;
-import com.fnba.jiramanager.config.Config;
-import com.fnba.jiramanager.config.Settings;
-import com.fnba.jiramanager.jira.JiraClient;
-import com.fnba.jiramanager.web.Routes;
+import com.fnba.kong.claude.ClaudeService;
+import com.fnba.kong.config.Config;
+import com.fnba.kong.config.Settings;
+import com.fnba.kong.jira.JiraClient;
+import com.fnba.kong.web.Routes;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;

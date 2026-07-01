@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   brand and page titles.
 - **Top-bar app name is now set in Metal Mania** (SIL OFL, self-hosted from
   `/public/fonts`). Page headings keep the default UI font.
+- **Renamed the technical identity to Kong**: Java package
+  `com.fnba.jiramanager` → `com.fnba.kong`, Maven artifact/jar `jira-manager` →
+  `kong` (build now produces `target/kong.jar`), and the version resource
+  `jira-manager.properties` → `kong.properties`. The git repository directory
+  and remote are unchanged.
 
 ## [1.0.0] — 2026-07-01
 

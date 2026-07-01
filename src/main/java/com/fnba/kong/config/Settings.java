@@ -1,4 +1,4 @@
-package com.fnba.jiramanager.config;
+package com.fnba.kong.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,4 +1,4 @@
-package com.fnba.jiramanager.config;
+package com.fnba.kong.config;
 
 /**
  * A board/view shown in the nav: a stable {@code slug} for URLs, a human

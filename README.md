@@ -1,4 +1,4 @@
-# Jira Manager
+# Kong
 
 A lightweight, server-side web app for viewing and managing Jira tasks on
 `fnba.atlassian.net` — a faster, purpose-built alternative to the Jira UI for the
@@ -56,8 +56,8 @@ The toolchain lives in `/workspace/.tools` (JDK 21 + Maven 3.9.9). Export it, th
 export JAVA_HOME=/workspace/.tools/jdk-21.0.11+10
 export PATH="$JAVA_HOME/bin:/workspace/.tools/apache-maven-3.9.9/bin:$PATH"
 
-mvn -q package                                   # → target/jira-manager.jar
-setsid java -jar target/jira-manager.jar >server.log 2>&1 </dev/null & disown
+mvn -q package                                   # → target/kong.jar
+setsid java -jar target/kong.jar >server.log 2>&1 </dev/null & disown
 ```
 
 Then open <http://localhost:7070>.
@@ -68,7 +68,7 @@ see [docs/REFERENCE.md](docs/REFERENCE.md#running--operations).
 
 ## Project layout
 ```
-src/main/java/com/fnba/jiramanager/
+src/main/java/com/fnba/kong/
   App.java                  bootstrap: config → services → routes
   config/   Config, Settings, BoardDef          configuration + persisted settings
   jira/     JiraClient                          Jira REST v3 wrapper (server-side auth, caching)

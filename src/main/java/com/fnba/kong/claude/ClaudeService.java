@@ -1,6 +1,6 @@
-package com.fnba.jiramanager.claude;
+package com.fnba.kong.claude;
 
-import com.fnba.jiramanager.config.Config;
+import com.fnba.kong.config.Config;
 
 import java.io.BufferedReader;
 import java.io.File;

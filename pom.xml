@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.fnba</groupId>
-    <artifactId>jira-manager</artifactId>
+    <artifactId>kong</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -13,7 +13,7 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javalin.version>6.3.0</javalin.version>
-        <main.class>com.fnba.jiramanager.App</main.class>
+        <main.class>com.fnba.kong.App</main.class>
     </properties>
 
     <dependencies>
@@ -56,7 +56,7 @@
     </dependencies>
 
     <build>
-        <finalName>jira-manager</finalName>
+        <finalName>kong</finalName>
         <resources>
             <!-- App resources (templates, static) — NOT filtered, so Thymeleaf's
                  ${...} / @{...} expressions are left untouched by Maven. -->
@@ -64,7 +64,7 @@
                 <directory>src/main/resources</directory>
                 <filtering>false</filtering>
             </resource>
-            <!-- Filtered — jira-manager.properties gets the pom version baked in. -->
+            <!-- Filtered — kong.properties gets the pom version baked in. -->
             <resource>
                 <directory>src/main/resources-filtered</directory>
                 <filtering>true</filtering>
@@ -86,7 +86,7 @@
                     <mainClass>${main.class}</mainClass>
                 </configuration>
             </plugin>
-            <!-- Fat/uber jar: mvn package -> target/jira-manager.jar -->
+            <!-- Fat/uber jar: mvn package -> target/kong.jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

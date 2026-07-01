@@ -1,4 +1,4 @@
-package com.fnba.jiramanager.jira;
+package com.fnba.kong.jira;
 
 import java.time.Instant;
 

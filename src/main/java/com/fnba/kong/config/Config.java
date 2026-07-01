@@ -1,4 +1,4 @@
-package com.fnba.jiramanager.config;
+package com.fnba.kong.config;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,7 +15,7 @@ import java.util.Properties;
  *   3. built-in default
  *
  * The Jira API token is read here and only ever used server-side by
- * {@link com.fnba.jiramanager.jira.JiraClient}; it is never sent to the browser.
+ * {@link com.fnba.kong.jira.JiraClient}; it is never sent to the browser.
  */
 public final class Config {
 
@@ -37,12 +37,12 @@ public final class Config {
     }
 
     /**
-     * The app version, read from the build-filtered {@code /jira-manager.properties}
+     * The app version, read from the build-filtered {@code /kong.properties}
      * on the classpath (Maven bakes in the pom {@code ${project.version}}). Falls
      * back to "dev" when running from an unfiltered classpath (e.g. a raw IDE run).
      */
     public static String appVersion() {
-        try (InputStream in = Config.class.getResourceAsStream("/jira-manager.properties")) {
+        try (InputStream in = Config.class.getResourceAsStream("/kong.properties")) {
             if (in != null) {
                 Properties p = new Properties();
                 p.load(in);
