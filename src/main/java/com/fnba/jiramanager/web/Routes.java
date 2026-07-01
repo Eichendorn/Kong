@@ -107,7 +107,7 @@ public class Routes {
                 .filter(b -> b.slug().equals(slug))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Unknown board: " + slug));
-        renderList(ctx, board.label(), board.jql(), slug);
+        renderList(ctx, "Work In Progress", board.jql(), slug);
     }
 
     /** A Kanban column: label, colour category, WIP limit, and status sub-groups. */
@@ -443,6 +443,8 @@ public class Routes {
         model.put("issues", sortByStatus(res.issues()));
         model.put("truncated", res.truncated());
         model.put("resultCap", MAX_RESULTS);
+        // A KANBAN toggle belongs in the top bar only on a real board list (not /search).
+        model.put("showKanbanNav", activeSlug != null && !activeSlug.isBlank());
         ctx.render("board.html", model);
     }
 

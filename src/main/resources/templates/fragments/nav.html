@@ -9,6 +9,8 @@
            th:text="${b.label()}"
            th:classappend="${b.slug()} == ${activeSlug} ? 'active' : ''">Board</a>
     </nav>
+    <a th:if="${showKanbanNav}" class="view-toggle nav-kanban"
+       th:href="@{'/kanban/' + ${activeSlug}}">KANBAN</a>
     <details class="nav-menu">
         <summary>Maintenance ▾</summary>
         <div class="nav-menu-items">

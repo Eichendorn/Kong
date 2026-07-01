@@ -95,8 +95,9 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .wip-input { width: 90px; }
 .settings-actions { margin-top: 8px; }
 
-/* Board controls: Show toggles on the left, Create Task pushed to the right. */
+/* Board controls: title on the left, Create Task pushed to the right. */
 .board-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.board-controls h1 { margin: 0; }
 .create-task-btn { margin-left: auto; background: var(--accent); color: #fff;
     border: 1px solid var(--accent); border-radius: 6px; padding: 6px 14px; font-weight: 600; }
 .create-task-btn:hover { filter: brightness(1.1); text-decoration: none; }
@@ -260,7 +261,8 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 /* Board page fills the viewport exactly: no page scroll, the list takes the
    leftover height below the header/title/controls and scrolls internally. */
 body.board-page { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-body.board-page .content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+body.board-page .content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+    max-width: none; }
 body.board-page .issues-scroll { flex: 1 1 auto; min-height: 0; }
 table.issues { width: 100%; border-collapse: collapse; background: var(--panel); }
 table.issues th, table.issues td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -270,7 +272,7 @@ table.issues td.summary { white-space: normal; }
 table.issues tbody tr:nth-child(odd) td { background: var(--panel); }
 table.issues tbody tr:nth-child(even) td { background: var(--greenbar); }
 table.issues tbody tr:hover td { background: var(--panel-2); }
-td.summary { max-width: 480px; }
+td.summary { width: 50%; max-width: 400px; }
 td.pts { text-align: center; }
 td.chk { text-align: center; }
 td.chk .badge { padding: 1px 6px; }

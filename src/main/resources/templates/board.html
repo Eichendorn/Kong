@@ -22,10 +22,8 @@
         than that, so some items are hidden. Narrow the JQL to see the rest.
     </div>
 
-    <h1 th:text="${title}">Board</h1>
-
     <div class="board-controls">
-        <a class="view-toggle" th:href="@{'/kanban/' + ${activeSlug}}">KANBAN</a>
+        <h1 th:text="${title}">Board</h1>
         <a class="create-task-btn" th:href="@{/create(board=${activeSlug})}">New Task</a>
     </div>
 
@@ -35,7 +33,7 @@
         <tr>
             <th>Key</th><th>Summary</th><th>Type</th><th>Status</th>
             <th title="Days in current status">Days In</th>
-            <th>Assignee</th><th>Dev Tester</th><th title="Developer Checklists complete">Chk</th>
+            <th>Reporter</th><th>Assignee</th><th>Dev Tester</th><th title="Developer Checklists complete">Chk</th>
         </tr>
         </thead>
         <tbody>
@@ -49,6 +47,7 @@
                       th:text="${i.status()}">Status</span>
             </td>
             <td class="days-in" th:text="${i.daysInStatusDisplay()}">0</td>
+            <td th:text="${i.reporter()}">Reporter</td>
             <td th:text="${i.assignee()}"
                 th:classappend="${i.assignee() == 'Unassigned'} ? 'unassigned' : ''">Assignee</td>
             <td th:text="${i.devTesterDisplay()}">Dev Tester</td>
