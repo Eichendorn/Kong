@@ -51,7 +51,8 @@
                       th:text="${i.status()}">Status</span>
             </td>
             <td class="days-in" th:text="${i.daysInStatusDisplay()}">0</td>
-            <td th:text="${i.assignee()}">Assignee</td>
+            <td th:text="${i.assignee()}"
+                th:classappend="${i.assignee() == 'Unassigned'} ? 'unassigned' : ''">Assignee</td>
             <td th:text="${i.devTesterDisplay()}">Dev Tester</td>
             <td class="chk">
                 <span th:if="${i.checklistsComplete()}" class="badge badge-yes" title="Checklists complete">✓</span>

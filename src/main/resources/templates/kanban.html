@@ -91,7 +91,8 @@
                                 </div>
                                 <div class="kanban-card-foot">
                                     <span class="kanban-type" th:text="${i.issueType()}">Type</span>
-                                    <span class="kanban-assignee" th:text="${i.assignee()}">Assignee</span>
+                                    <span class="kanban-assignee" th:text="${i.assignee()}"
+                                          th:classappend="${i.assignee() == 'Unassigned'} ? 'unassigned' : ''">Assignee</span>
                                     <span class="kanban-days" title="Days — in status / in column / on board"
                                           th:text="${i.daysInStatusDisplay()} + ' / ' + ${i.daysInColumnDisplay()} + ' / ' + ${i.daysOnBoardDisplay()} + 'd'">0 / 0 / 0d</span>
                                 </div>

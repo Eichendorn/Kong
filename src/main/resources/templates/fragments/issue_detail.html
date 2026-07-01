@@ -57,6 +57,7 @@
             <dd><span class="inline-edit" title="Click to edit"
                       th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/assignee'}"
                       hx-target="closest dd" hx-swap="innerHTML"
+                      th:classappend="${issue.assignee() == 'Unassigned'} ? 'unassigned' : ''"
                       th:text="${issue.assignee()}">Assignee</span></dd>
             <dt>Reporter</dt>
             <dd><span class="inline-edit" title="Click to edit"
