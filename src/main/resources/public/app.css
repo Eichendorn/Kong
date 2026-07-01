@@ -9,6 +9,7 @@
     --green: #3ba55d;
     --greenbar: #2b362e;
     --amber: #d8a657;
+    --orange: #e8833a;
     --red: #ed4245;
 }
 
@@ -39,7 +40,7 @@ code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-si
     background: var(--panel); border-bottom: 1px solid var(--border);
     padding: 10px 18px; flex-wrap: wrap;
 }
-.brand { font-weight: 700; font-size: 16px; color: var(--text); }
+.brand { font-weight: 700; font-size: 16px; color: var(--orange); }
 .boards { display: flex; gap: 6px; flex-wrap: wrap; }
 .boards a {
     padding: 4px 10px; border-radius: 6px; color: var(--muted);
@@ -79,7 +80,7 @@ button:disabled, button:disabled:hover {
 }
 
 .content { padding: 18px 24px; max-width: 1100px; margin: 0 auto; }
-h1 { font-size: 20px; margin: 0 0 4px; }
+h1 { font-size: 20px; margin: 0 0 4px; color: var(--orange); }
 .jql { color: var(--muted); font-size: 12px; margin: 0 0 16px; }
 .banner { background: #4a3a1a; border: 1px solid var(--amber); padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; }
 .error { background: #432; border: 1px solid var(--red); color: #f5c2c2; padding: 10px 14px; border-radius: 8px; }

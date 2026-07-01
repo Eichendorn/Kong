@@ -213,8 +213,9 @@ public class Routes {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Unknown board: " + slug));
         Map<String, Object> model = baseModel(slug);
-        model.put("title", board.label() + " — Kanban");
+        model.put("title", "Work In Progress - Kanban");
         model.put("boardSlug", slug);
+        model.put("showListNav", true);   // LIST toggle lives in the top bar on the Kanban page
         model.put("highlight", ctx.queryParam("highlight"));   // card to spotlight, if any
 
         // Reuses the (cached) board search. Active items only, folded into the

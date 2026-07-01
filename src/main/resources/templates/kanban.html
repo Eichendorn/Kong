@@ -25,7 +25,6 @@
 
     <div class="kanban-head">
         <h1 th:text="${title}">Kanban</h1>
-        <a class="view-toggle" th:href="@{'/board/' + ${boardSlug}}">LIST</a>
     </div>
 
     <div class="kanban" th:if="${!columns.isEmpty()}">

@@ -11,6 +11,8 @@
     </nav>
     <a th:if="${showKanbanNav}" class="view-toggle nav-kanban"
        th:href="@{'/kanban/' + ${activeSlug}}">KANBAN</a>
+    <a th:if="${showListNav}" class="view-toggle nav-list"
+       th:href="@{'/board/' + ${activeSlug}}">LIST</a>
     <details class="nav-menu">
         <summary>Maintenance ▾</summary>
         <div class="nav-menu-items">
