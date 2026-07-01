@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] — 2026-07-01
+
+### Changed
+- **Lighter theme.** The app background is lighter, giving the Kanban a clear
+  depth order — screen background (lightest) › columns › cards (darkest).
+- **Always-visible scrollbars** at normal width (no longer thin/transparent),
+  with a subtle muted-grey thumb.
+
 ## [1.1.0] — 2026-07-01
 
 The "Kong" rebrand.
