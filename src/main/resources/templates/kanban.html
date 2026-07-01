@@ -35,8 +35,8 @@
                 <span class="status" th:classappend="'sc-' + ${c.statusCategory()}"
                       th:text="${c.status()}">Status</span>
                 <span class="kanban-count" th:classappend="${c.overWip()} ? 'over' : ''"
-                      th:title="'Cards / WIP limit'">
-                    <span th:text="${c.cardCount()}">0</span>/<span th:text="${c.wipLimit()}">0</span>
+                      th:title="${c.wipLimit() > 0} ? 'Cards / WIP limit' : 'Cards (no WIP limit)'">
+                    <span th:text="${c.cardCount()}">0</span><th:block th:if="${c.wipLimit() > 0}">/<span th:text="${c.wipLimit()}">0</span></th:block>
                 </span>
             </header>
             <div class="kanban-cards">

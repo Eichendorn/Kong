@@ -129,6 +129,12 @@ public class Routes {
             "On Deck", "Implement", "Track", "Validate", "Release", "Verify");
     private static final int DEFAULT_WIP = 5;
 
+    /** Columns that never carry a WIP limit (unlimited; no settings row, never flagged). */
+    private static final Set<String> NO_WIP_COLUMNS = Set.of("Verify");
+    /** The columns that do get an editable WIP limit, in workflow order. */
+    static final List<String> WIP_LIMITED_COLUMNS = KANBAN_COLUMNS.stream()
+            .filter(c -> !NO_WIP_COLUMNS.contains(c)).toList();
+
     /** "Days on board" counts from when a task first enters this status. */
     private static final String BOARD_ENTRY_STATUS = "Encompass On Deck";
 
@@ -235,7 +241,9 @@ public class Routes {
         List<Column> columns = byCol.entrySet().stream()
                 .sorted(Comparator.comparingInt(e -> colRank.get(e.getKey())))
                 .map(e -> new Column(e.getKey(), colCat.get(e.getKey()),
-                        settings.wipLimit(e.getKey(), DEFAULT_WIP), statusGroups(e.getValue())))
+                        NO_WIP_COLUMNS.contains(e.getKey()) ? 0
+                                : settings.wipLimit(e.getKey(), DEFAULT_WIP),
+                        statusGroups(e.getValue())))
                 .toList();
         model.put("columns", columns);
         ctx.render("kanban.html", model);
@@ -253,7 +261,7 @@ public class Routes {
     private void showSettings(Context ctx) {
         Map<String, Object> model = baseModel(null);
         model.put("title", "Settings");
-        List<WipRow> rows = KANBAN_COLUMNS.stream()
+        List<WipRow> rows = WIP_LIMITED_COLUMNS.stream()
                 .map(c -> new WipRow(c, settings.wipLimit(c, DEFAULT_WIP)))
                 .toList();
         model.put("wipRows", rows);
@@ -262,12 +270,12 @@ public class Routes {
 
     private void saveWipLimits(Context ctx) {
         Map<String, Integer> limits = new java.util.LinkedHashMap<>();
-        for (int i = 0; i < KANBAN_COLUMNS.size(); i++) {
+        for (int i = 0; i < WIP_LIMITED_COLUMNS.size(); i++) {
             String raw = ctx.formParam("wip_" + i);
             if (raw != null && !raw.isBlank()) {
                 try {
                     int v = Integer.parseInt(raw.trim());
-                    if (v > 0) limits.put(KANBAN_COLUMNS.get(i), v);
+                    if (v > 0) limits.put(WIP_LIMITED_COLUMNS.get(i), v);
                 } catch (NumberFormatException ignore) { /* skip invalid */ }
             }
         }
