@@ -68,6 +68,7 @@ public class Routes {
         app.get("/settings", this::showSettings);
         app.post("/settings/wip", this::saveWipLimits);
         app.get("/maintenance/transitions", this::showTransitions);
+        app.get("/history", this::history);
         app.get("/users/suggest", this::suggestUsers);
         app.get("/issue/{key}", this::issue);
         app.get("/issue/{key}/detail", this::detailFragment);
@@ -308,6 +309,14 @@ public class Routes {
                 ? "ORDER BY updated DESC" : cfg.boards().get(0).jql();
         model.put("logs", jiraReady() ? jira.recentTransitions(jql, 50) : List.<TransitionLog>of());
         ctx.render("recent_transitions.html", model);
+    }
+
+    /** The revision-history screen: the app version + the changelog rendered to HTML. */
+    private void history(Context ctx) {
+        Map<String, Object> model = baseModel(null);
+        model.put("title", "Revision history");
+        model.put("changelogHtml", Changelog.html());
+        ctx.render("history.html", model);
     }
 
     /** The only issue types offered when creating a new task. */
@@ -765,6 +774,7 @@ public class Routes {
         model.put("activeSlug", activeSlug == null ? "" : activeSlug);
         model.put("jiraReady", jiraReady());
         model.put("jiraBaseUrl", jiraBrowseBase());
+        model.put("version", Config.appVersion());
         return model;
     }
 

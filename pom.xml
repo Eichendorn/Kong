@@ -47,10 +47,35 @@
             <artifactId>slf4j-simple</artifactId>
             <version>2.0.13</version>
         </dependency>
+        <!-- Markdown → HTML for the revision-history (CHANGELOG) screen -->
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark</artifactId>
+            <version>0.22.0</version>
+        </dependency>
     </dependencies>
 
     <build>
         <finalName>jira-manager</finalName>
+        <resources>
+            <!-- App resources (templates, static) — NOT filtered, so Thymeleaf's
+                 ${...} / @{...} expressions are left untouched by Maven. -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+            <!-- Filtered — jira-manager.properties gets the pom version baked in. -->
+            <resource>
+                <directory>src/main/resources-filtered</directory>
+                <filtering>true</filtering>
+            </resource>
+            <!-- Bundle the changelog so the app can render its revision history. -->
+            <resource>
+                <directory>${project.basedir}</directory>
+                <includes><include>CHANGELOG.md</include></includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
         <plugins>
             <!-- mvn exec:java -->
             <plugin>

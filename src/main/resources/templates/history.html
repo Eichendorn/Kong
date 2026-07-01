@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Jira Manager — Revision history</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+    <link rel="stylesheet" href="/app.css"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content history-main">
+    <a class="back-link" href="/">&larr; Back</a>
+    <h1 class="history-title">Revision history</h1>
+    <!-- changelogHtml is produced by commonmark from our own CHANGELOG.md
+         (markup in the text is escaped), so it is safe to emit as HTML. -->
+    <article class="changelog" th:utext="${changelogHtml}">Changelog goes here.</article>
+</main>
+</body>
+</html>

@@ -36,6 +36,25 @@ public final class Config {
         return new Config();
     }
 
+    /**
+     * The app version, read from the build-filtered {@code /jira-manager.properties}
+     * on the classpath (Maven bakes in the pom {@code ${project.version}}). Falls
+     * back to "dev" when running from an unfiltered classpath (e.g. a raw IDE run).
+     */
+    public static String appVersion() {
+        try (InputStream in = Config.class.getResourceAsStream("/jira-manager.properties")) {
+            if (in != null) {
+                Properties p = new Properties();
+                p.load(in);
+                String v = p.getProperty("version");
+                if (v != null && !v.isBlank() && !v.startsWith("${")) return v.trim();
+            }
+        } catch (IOException ignored) {
+            // fall through to the default
+        }
+        return "dev";
+    }
+
     public String jiraBaseUrl() { return require("jira.baseUrl", "JIRA_BASE_URL", "https://fnba.atlassian.net"); }
     public String jiraEmail()   { return require("jira.email",   "JIRA_EMAIL",   null); }
     public String jiraToken()   { return require("jira.token",   "JIRA_TOKEN",   null); }

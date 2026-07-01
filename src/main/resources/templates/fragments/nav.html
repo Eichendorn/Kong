@@ -3,6 +3,8 @@
 <body>
 <header th:fragment="nav" class="topbar">
     <a class="brand" href="/">Jira Manager</a>
+    <a class="version" href="/history" title="Revision history"
+       th:text="'v' + ${version}">v?</a>
     <nav class="boards">
         <a th:each="b : ${boards}"
            th:href="@{'/board/' + ${b.slug()}}"
