@@ -131,6 +131,8 @@ public class Routes {
 
     /** Columns that never carry a WIP limit (unlimited; no settings row, never flagged). */
     private static final Set<String> NO_WIP_COLUMNS = Set.of("Verify");
+    /** Columns whose cards are grouped by Reporter (alphabetical) instead of by status. */
+    private static final Set<String> REPORTER_GROUPED_COLUMNS = Set.of("Verify");
     /** The columns that do get an editable WIP limit, in workflow order. */
     static final List<String> WIP_LIMITED_COLUMNS = KANBAN_COLUMNS.stream()
             .filter(c -> !NO_WIP_COLUMNS.contains(c)).toList();
@@ -166,6 +168,19 @@ public class Routes {
                         GROUP_ORDER.getOrDefault(g.get(0).status(), g.get(0).statusRank())))
                 .map(g -> new StatusGroup(g.get(0).status(), g.get(0).statusCategory(),
                         g.stream().sorted(BY_AGE_OLDEST_FIRST).toList()))
+                .toList();
+    }
+
+    /** Split a column's cards into groups by Reporter (alphabetical), each aged oldest-first. */
+    private static List<StatusGroup> reporterGroups(List<Issue> issues) {
+        Map<String, List<Issue>> byReporter = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (Issue i : issues) {
+            String r = (i.reporter() == null || i.reporter().isBlank()) ? "—" : i.reporter();
+            byReporter.computeIfAbsent(r, k -> new ArrayList<>()).add(i);
+        }
+        return byReporter.entrySet().stream()
+                .map(e -> new StatusGroup(e.getKey(), e.getValue().get(0).statusCategory(),
+                        e.getValue().stream().sorted(BY_AGE_OLDEST_FIRST).toList()))
                 .toList();
     }
 
@@ -243,7 +258,8 @@ public class Routes {
                 .map(e -> new Column(e.getKey(), colCat.get(e.getKey()),
                         NO_WIP_COLUMNS.contains(e.getKey()) ? 0
                                 : settings.wipLimit(e.getKey(), DEFAULT_WIP),
-                        statusGroups(e.getValue())))
+                        REPORTER_GROUPED_COLUMNS.contains(e.getKey())
+                                ? reporterGroups(e.getValue()) : statusGroups(e.getValue())))
                 .toList();
         model.put("columns", columns);
         ctx.render("kanban.html", model);
