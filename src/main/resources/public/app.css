@@ -191,6 +191,8 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .kanban-demo-date { color: #f5b97a; }
 .kanban-relmgr { font-size: 12px; margin-top: 6px; color: var(--text); }
 .kanban-relmgr-name { color: #7ad9c5; }
+.kanban-specapprover { font-size: 12px; margin-top: 6px; color: var(--text); }
+.kanban-specapprover-name { color: #e6a8c8; }
 .kanban-assignee { color: #8ce0a8; }
 /* An unassigned issue's Assignee value shows red wherever it appears. Placed after
    .kanban-assignee so it wins the equal-specificity tie on the card. */

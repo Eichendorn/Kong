@@ -73,6 +73,11 @@
                                     <span class="kanban-tester-label">Tester</span>
                                     <span class="kanban-tester-name" th:text="${i.devTesterDisplay()}">Name</span>
                                 </div>
+                                <div class="kanban-specapprover"
+                                     th:if="${i.status() == 'Encompass On Deck' or i.status() == 'Spec Review'}">
+                                    <span class="kanban-tester-label">Spec Approver</span>
+                                    <span class="kanban-specapprover-name" th:text="${i.specApproverDisplay()}">Name</span>
+                                </div>
                                 <div class="kanban-reporter" th:if="${i.status() == 'User Verification' or i.status() == 'Ready to Demo'}">
                                     <span class="kanban-tester-label">Reporter</span>
                                     <span class="kanban-reporter-name" th:text="${i.reporter()}">Name</span>

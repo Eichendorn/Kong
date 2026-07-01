@@ -32,6 +32,7 @@ public record Issue(
         List<Link> devChecklists,
         String reasonForTracking,
         String demoScheduledDate,
+        String specApprover,
         String specDetail,
         String descriptionText,
         String updated,
@@ -56,6 +57,8 @@ public record Issue(
     public static final String RELEASE_MANAGER_FIELD = "customfield_10191";
     /** Demo Scheduled Date — a date-picker (yyyy-MM-dd) field on fnba.atlassian.net. */
     public static final String DEMO_SCHEDULED_DATE_FIELD = "customfield_14601";
+    /** Specification Approver — a single user-picker field on fnba.atlassian.net. */
+    public static final String SPEC_APPROVER_FIELD = "customfield_10094";
 
     /** A hyperlink pulled out of a rich-text field (e.g. the Developer Checklists links). */
     public record Link(String text, String href) {}
@@ -97,6 +100,7 @@ public record Issue(
                 extractLinks(f.path(DEV_CHECKLISTS_FIELD)),
                 extractDescription(f.path(REASON_FOR_TRACKING_FIELD)),
                 f.path(DEMO_SCHEDULED_DATE_FIELD).asText(""),
+                f.path(SPEC_APPROVER_FIELD).path("displayName").asText(""),
                 extractDescription(f.path(SPEC_DETAIL_FIELD)),
                 extractDescription(f.path("description")),
                 f.path("updated").asText(""),
@@ -172,7 +176,7 @@ public record Issue(
     public Issue withTiming(Instant statusSince, Instant boardSince) {
         return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
                 devTester, devTesterUsers, reporter, releaseAuthorizedBy, releaseManager, priority, storyPoints, devChecklists,
-                reasonForTracking, demoScheduledDate, specDetail, descriptionText, updated, statusSince, categorySince,
+                reasonForTracking, demoScheduledDate, specApprover, specDetail, descriptionText, updated, statusSince, categorySince,
                 boardSince, checklistsComplete, raw);
     }
 
@@ -244,6 +248,11 @@ public record Issue(
     /** Release Manager name, or an em dash when unset. */
     public String releaseManagerDisplay() {
         return (releaseManager == null || releaseManager.isBlank()) ? "—" : releaseManager;
+    }
+
+    /** Specification Approver name, or an em dash when unset. */
+    public String specApproverDisplay() {
+        return (specApprover == null || specApprover.isBlank()) ? "—" : specApprover;
     }
 
     /** Reason for Tracking text, or an em dash when unset. */
