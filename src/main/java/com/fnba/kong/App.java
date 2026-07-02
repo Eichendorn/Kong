@@ -42,7 +42,7 @@ public class App {
         new Routes(cfg, jira, claude, settings).register(app);
 
         app.start(cfg.port());
-        System.out.println("Jira Manager running at http://localhost:" + cfg.port());
+        System.out.println("Kong running at http://localhost:" + cfg.port());
         if (jira == null) {
             System.out.println("WARNING: no Jira credentials configured — set jira.email/jira.token "
                     + "in config.local.properties (copy config.local.properties.example).");
