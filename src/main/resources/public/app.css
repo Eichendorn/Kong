@@ -161,7 +161,7 @@ h1 { font-size: 20px; margin: 0 0 4px; color: var(--orange); }
     color: #e6dca0; white-space: nowrap; }
 .kanban-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
 .kanban-card a { display: block; padding: 10px; color: var(--text); text-decoration: none; }
-.kanban-card a:hover { background: var(--border); border-radius: 8px; }
+.kanban-card a:hover { background: #232529; border-radius: 8px; }
 .kanban-card.highlighted { border-color: var(--accent); }
 .kanban-card.selected { border-color: #f5a623; }
 
