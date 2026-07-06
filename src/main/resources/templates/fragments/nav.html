@@ -6,15 +6,20 @@
     <a class="version" href="/history" title="Revision history"
        th:text="'v' + ${version}">v?</a>
     <nav class="boards">
-        <a th:each="b : ${boards}"
-           th:href="@{'/board/' + ${b.slug()}}"
-           th:text="${b.label()}"
-           th:classappend="${b.slug()} == ${activeSlug} ? 'active' : ''">Board</a>
+        <select class="board-select" aria-label="Board"
+                onchange="if (this.value) window.location.href = this.value;">
+            <option th:each="b : ${boards}"
+                    th:value="@{'/board/' + ${b.slug()}}"
+                    th:text="${b.label()}"
+                    th:selected="${b.slug()} == ${activeSlug}">Board</option>
+        </select>
     </nav>
     <a th:if="${showKanbanNav}" class="view-toggle nav-kanban"
        th:href="@{'/kanban/' + ${activeSlug}}">KANBAN</a>
     <a th:if="${showListNav}" class="view-toggle nav-list"
-       th:href="@{'/board/' + ${activeSlug}}">LIST</a>
+       th:href="@{'/board/' + ${activeSlug}}">WIP List</a>
+    <a th:if="${showSpecifyDoneNav}" class="view-toggle nav-specify-done"
+       th:href="@{'/specify-done/' + ${activeSlug}}">Specify Done</a>
     <details class="nav-menu">
         <summary>Maintenance ▾</summary>
         <div class="nav-menu-items">

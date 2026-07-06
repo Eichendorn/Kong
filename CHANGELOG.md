@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] — 2026-07-06
+
+### Added
+- **Specify Done view.** A new top-bar toggle opens a list of the board's
+  "Specify Done" items (same project/issue-type filter, status pinned to
+  Specify Done). It uses the WIP List columns but drops **Assignee**, adds a
+  **Priority** column, and adds **Specification Author** and **Specification
+  Approver** after Reporter.
+
+### Changed
+- **Renamed the "LIST" toggle to "WIP List"** to distinguish it from the new
+  Specify Done view.
+- **Board switcher is now a dropdown.** The row of board buttons (which, with a
+  single board, duplicated the WIP List toggle) is now an always-visible
+  pick-list — one entry today, ready to scale as boards are added.
+
 ## [1.1.2] — 2026-07-02
 
 ### Fixed

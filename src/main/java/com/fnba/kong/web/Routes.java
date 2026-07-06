@@ -62,6 +62,7 @@ public class Routes {
 
         app.get("/board/{slug}", this::board);
         app.get("/kanban/{slug}", this::kanban);
+        app.get("/specify-done/{slug}", this::specifyDone);
         app.get("/search", this::search);
         app.get("/create", this::showCreate);
         app.post("/create", this::doCreate);
@@ -109,6 +110,47 @@ public class Routes {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Unknown board: " + slug));
         renderList(ctx, "Work In Progress", board.jql(), slug);
+    }
+
+    /**
+     * The Specify Done queue for a board: the same project/issue-type filter as
+     * the board, but restricted to the "Specify Done" status. Rendered with its
+     * own column set (Specification Author/Approver instead of Assignee).
+     */
+    private void specifyDone(Context ctx) {
+        String slug = ctx.pathParam("slug");
+        BoardDef board = cfg.boards().stream()
+                .filter(b -> b.slug().equals(slug))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Unknown board: " + slug));
+        Map<String, Object> model = baseModel(slug);
+        model.put("title", "Specify Done");
+        String jql = specifyDoneJql(board.jql());
+        model.put("jql", jql);
+        JiraClient.SearchResult res = jiraReady()
+                ? jira.search(jql, MAX_RESULTS) : new JiraClient.SearchResult(List.of(), false);
+        model.put("issues", sortByStatus(res.issues()));
+        model.put("truncated", res.truncated());
+        model.put("resultCap", MAX_RESULTS);
+        // From Specify Done you can jump to either of the other two views.
+        model.put("showKanbanNav", true);
+        model.put("showListNav", true);
+        ctx.render("specify_done.html", model);
+    }
+
+    private static final Pattern STATUS_CLAUSE = Pattern.compile(
+            "(?i)\\s+AND\\s+status\\s+(?:not\\s+in|in|=|!=)\\s*(?:\\([^)]*\\)|\"[^\"]*\"|'[^']*'|\\S+)");
+    private static final Pattern ORDER_BY_CLAUSE = Pattern.compile("(?i)\\s+ORDER\\s+BY\\s+.*$");
+
+    /**
+     * Rewrite a board's JQL to select only its "Specify Done" items: drop any
+     * existing status predicate and ORDER BY, then pin the status and re-sort by
+     * most-recently updated. Keeps the project/issue-type filter board-agnostic.
+     */
+    static String specifyDoneJql(String boardJql) {
+        String base = ORDER_BY_CLAUSE.matcher(boardJql).replaceAll("");
+        base = STATUS_CLAUSE.matcher(base).replaceAll("").trim();
+        return base + " AND status = \"Specify Done\" ORDER BY updated DESC";
     }
 
     /** A Kanban column: label, colour category, WIP limit, and status sub-groups. */
@@ -216,7 +258,8 @@ public class Routes {
         Map<String, Object> model = baseModel(slug);
         model.put("title", "Work In Progress - Kanban");
         model.put("boardSlug", slug);
-        model.put("showListNav", true);   // LIST toggle lives in the top bar on the Kanban page
+        model.put("showListNav", true);   // WIP List toggle lives in the top bar on the Kanban page
+        model.put("showSpecifyDoneNav", true);
         model.put("highlight", ctx.queryParam("highlight"));   // card to spotlight, if any
 
         // Reuses the (cached) board search. Active items only, folded into the
@@ -453,8 +496,11 @@ public class Routes {
         model.put("issues", sortByStatus(res.issues()));
         model.put("truncated", res.truncated());
         model.put("resultCap", MAX_RESULTS);
-        // A KANBAN toggle belongs in the top bar only on a real board list (not /search).
-        model.put("showKanbanNav", activeSlug != null && !activeSlug.isBlank());
+        // The KANBAN / Specify Done toggles belong in the top bar only on a real
+        // board list (not /search), where there's a slug to target.
+        boolean hasSlug = activeSlug != null && !activeSlug.isBlank();
+        model.put("showKanbanNav", hasSlug);
+        model.put("showSpecifyDoneNav", hasSlug);
         ctx.render("board.html", model);
     }
 

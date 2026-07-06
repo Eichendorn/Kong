@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="'Kong — ' + ${title}">Kong</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+    <link rel="stylesheet" href="/app.css"/>
+    <script src="/htmx.min.js"></script>
+</head>
+<body class="board-page">
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content">
+    <div th:if="${!jiraReady}" class="banner">
+        No Jira credentials configured. Copy <code>config.local.properties.example</code> to
+        <code>config.local.properties</code> and add your API token, then restart.
+    </div>
+
+    <div th:if="${truncated}" class="banner">
+        Showing the first <span th:text="${resultCap}">500</span> matches — this board has more
+        than that, so some items are hidden. Narrow the JQL to see the rest.
+    </div>
+
+    <div class="board-controls">
+        <h1 th:text="${title}">Specify Done</h1>
+        <a class="create-task-btn" th:href="@{/create(board=${activeSlug})}">New Task</a>
+    </div>
+
+    <div class="issues-scroll" th:if="${!issues.isEmpty()}">
+    <table class="issues">
+        <thead>
+        <tr>
+            <th>Key</th><th>Summary</th><th>Type</th><th>Priority</th><th>Status</th>
+            <th title="Days in current status">Days In</th>
+            <th>Reporter</th><th>Specification Author</th><th>Specification Approver</th>
+            <th>Dev Tester</th><th title="Developer Checklists complete">Chk</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="i : ${issues}">
+            <td><a th:href="@{'/issue/' + ${i.key()}(board=${activeSlug})}" th:text="${i.key()}">KEY-1</a></td>
+            <td class="summary" th:text="${i.summary()}">summary</td>
+            <td th:text="${i.issueType()}">Task</td>
+            <td th:text="${i.priority()}">Priority</td>
+            <td>
+                <span class="status"
+                      th:classappend="'sc-' + ${i.statusCategory()}"
+                      th:text="${i.status()}">Status</span>
+            </td>
+            <td class="days-in" th:text="${i.daysInStatusDisplay()}">0</td>
+            <td th:text="${i.reporter()}">Reporter</td>
+            <td th:text="${i.specAuthorDisplay()}">Specification Author</td>
+            <td th:text="${i.specApproverDisplay()}">Specification Approver</td>
+            <td th:text="${i.devTesterDisplay()}">Dev Tester</td>
+            <td class="chk">
+                <span th:if="${i.checklistsComplete()}" class="badge badge-yes" title="Checklists complete">✓</span>
+                <span th:unless="${i.checklistsComplete()}" class="badge badge-no" title="Checklists incomplete">✗</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <p th:if="${issues.isEmpty()}" class="empty">No issues.</p>
+</main>
+</body>
+</html>

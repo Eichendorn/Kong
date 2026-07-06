@@ -77,6 +77,11 @@ a.version:hover { color: var(--text); border-color: var(--accent); text-decorati
     padding: 4px 10px; border-radius: 6px; color: var(--muted);
 }
 .boards a.active, .boards a:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
+.board-select {
+    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer;
+}
+.board-select:hover { border-color: var(--accent); }
 .nav-settings { padding: 4px 10px; border-radius: 6px; color: var(--muted); white-space: nowrap; }
 .nav-settings:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 

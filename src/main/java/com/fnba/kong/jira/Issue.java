@@ -32,6 +32,7 @@ public record Issue(
         List<Link> devChecklists,
         String reasonForTracking,
         String demoScheduledDate,
+        String specAuthor,
         String specApprover,
         String specDetail,
         String descriptionText,
@@ -59,6 +60,8 @@ public record Issue(
     public static final String DEMO_SCHEDULED_DATE_FIELD = "customfield_14601";
     /** Specification Approver — a single user-picker field on fnba.atlassian.net. */
     public static final String SPEC_APPROVER_FIELD = "customfield_10094";
+    /** Specification Author — a multi-user picker (array of user objects) on fnba.atlassian.net. */
+    public static final String SPEC_AUTHOR_FIELD = "customfield_10079";
 
     /** A hyperlink pulled out of a rich-text field (e.g. the Developer Checklists links). */
     public record Link(String text, String href) {}
@@ -100,6 +103,7 @@ public record Issue(
                 extractLinks(f.path(DEV_CHECKLISTS_FIELD)),
                 extractDescription(f.path(REASON_FOR_TRACKING_FIELD)),
                 f.path(DEMO_SCHEDULED_DATE_FIELD).asText(""),
+                extractUserNames(f.path(SPEC_AUTHOR_FIELD)),
                 f.path(SPEC_APPROVER_FIELD).path("displayName").asText(""),
                 extractDescription(f.path(SPEC_DETAIL_FIELD)),
                 extractDescription(f.path("description")),
@@ -166,7 +170,7 @@ public record Issue(
     public Issue withTiming(Instant statusSince, Instant boardSince) {
         return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
                 devTester, devTesterUsers, reporter, releaseAuthorizedBy, releaseManager, priority, storyPoints, devChecklists,
-                reasonForTracking, demoScheduledDate, specApprover, specDetail, descriptionText, updated, statusSince, categorySince,
+                reasonForTracking, demoScheduledDate, specAuthor, specApprover, specDetail, descriptionText, updated, statusSince, categorySince,
                 boardSince, checklistsComplete, raw);
     }
 
@@ -243,6 +247,11 @@ public record Issue(
     /** Specification Approver name, or an em dash when unset. */
     public String specApproverDisplay() {
         return (specApprover == null || specApprover.isBlank()) ? "—" : specApprover;
+    }
+
+    /** Specification Author name(s), or an em dash when unset. */
+    public String specAuthorDisplay() {
+        return (specAuthor == null || specAuthor.isBlank()) ? "—" : specAuthor;
     }
 
     /** Reason for Tracking text, or an em dash when unset. */
