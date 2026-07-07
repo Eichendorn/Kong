@@ -12,7 +12,7 @@ import java.util.List;
  * author, created timestamp, plain-text body, and any nested {@link #replies}.
  */
 public record Comment(String id, String parentId, String author, String created,
-                      String body, List<Comment> replies) {
+                      String body, String bodyHtml, List<Comment> replies) {
 
     private static final DateTimeFormatter IN =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
@@ -27,11 +27,18 @@ public record Comment(String id, String parentId, String author, String created,
         String created = formatDate(node.path("created").asText(""));
         StringBuilder sb = new StringBuilder();
         collectText(node.path("body"), sb);
-        return new Comment(id, parentId, author, created, sb.toString().strip(), new ArrayList<>());
+        String rendered = node.path("renderedBody").asText("");
+        return new Comment(id, parentId, author, created, sb.toString().strip(),
+                rendered, new ArrayList<>());
     }
 
     public boolean hasReplies() {
         return replies != null && !replies.isEmpty();
+    }
+
+    /** Comment body as sanitized, proxy-linked HTML (Jira's own rendering); "" when empty. */
+    public String bodyRichHtml() {
+        return RichText.render(bodyHtml);
     }
 
     private static String formatDate(String s) {

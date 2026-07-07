@@ -35,6 +35,15 @@ public class JiraClient {
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(15))
             .build();
+    /**
+     * Separate client for attachment bytes: Jira 303-redirects attachment
+     * requests to a signed media-CDN URL, so this one follows redirects (the
+     * signed URL needs no auth of its own).
+     */
+    private final HttpClient httpRedirect = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(15))
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
     private final ObjectMapper mapper = new ObjectMapper();
     private final String baseUrl;
     private final String authHeader;
@@ -316,7 +325,9 @@ public class JiraClient {
 
     /** Fetch a single issue with all fields. */
     public Issue getIssue(String key) {
-        JsonNode node = get(baseUrl + "/rest/api/3/issue/" + enc(key));
+        // renderedFields gives us Jira's own HTML rendering of the rich-text
+        // fields (description, spec details) — used read-only on the detail screen.
+        JsonNode node = get(baseUrl + "/rest/api/3/issue/" + enc(key) + "?expand=renderedFields");
         return Issue.from(node, STORY_POINTS_FIELD);
     }
 
@@ -326,7 +337,8 @@ public class JiraClient {
      * reading order. Issues with no replies render as a flat newest-first list.
      */
     public List<Comment> comments(String key) {
-        JsonNode root = get(baseUrl + "/rest/api/3/issue/" + enc(key) + "/comment?maxResults=200");
+        JsonNode root = get(baseUrl + "/rest/api/3/issue/" + enc(key)
+                + "/comment?maxResults=200&expand=renderedBody");
         List<Comment> all = new ArrayList<>();
         for (JsonNode c : root.path("comments")) all.add(Comment.from(c));
 
@@ -610,6 +622,38 @@ public class JiraClient {
         body.put("timeSpent", timeSpent);
         if (comment != null && !comment.isBlank()) body.set("comment", adf(comment));
         post(baseUrl + "/rest/api/3/issue/" + enc(key) + "/worklog", body);
+    }
+
+    // ---- Attachments -------------------------------------------------------
+
+    /** An attachment's bytes and content type, fetched with Kong's Jira credentials. */
+    public record Attachment(byte[] bytes, String contentType) {}
+
+    /**
+     * Fetch an attachment by numeric id, following Jira's redirect to the media
+     * CDN. {@code full=false} returns the small thumbnail; {@code true} the
+     * full-size file. The browser can't authenticate to Jira, so Kong proxies.
+     */
+    public Attachment fetchAttachment(String attachmentId, boolean full) {
+        String kind = full ? "content" : "thumbnail";
+        String url = baseUrl + "/rest/api/3/attachment/" + kind + "/" + enc(attachmentId);
+        HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+                .timeout(Duration.ofSeconds(30))
+                .header("Authorization", authHeader)
+                .GET().build();
+        try {
+            HttpResponse<byte[]> resp = httpRedirect.send(req, HttpResponse.BodyHandlers.ofByteArray());
+            int sc = resp.statusCode();
+            if (sc < 200 || sc >= 300) {
+                throw new JiraException(sc, "GET " + url + " -> HTTP " + sc);
+            }
+            String ct = resp.headers().firstValue("Content-Type").orElse("application/octet-stream");
+            return new Attachment(resp.body(), ct);
+        } catch (JiraException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JiraException(0, "Attachment fetch failed: " + url + " (" + e.getMessage() + ")");
+        }
     }
 
     // ---- HTTP plumbing -----------------------------------------------------

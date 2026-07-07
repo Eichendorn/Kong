@@ -118,42 +118,33 @@
         </form>
     </div>
 
-    <div class="field-block editable">
-        <input type="checkbox" class="edit-toggle" id="edit-spec"/>
+    <div class="field-block" th:with="html=${issue.specDetailRichHtml()}">
         <div class="field-head">
             <h3 class="field-title">Specification Details</h3>
-            <label for="edit-spec" class="edit-btn">Edit</label>
-            <label for="edit-spec" class="cancel-btn">Cancel</label>
+            <a class="edit-btn" th:href="${jiraBaseUrl} + '/browse/' + ${issue.key()}"
+               target="_blank" rel="noopener" title="Edit this field in Jira">Edit in Jira ↗</a>
         </div>
-        <div class="field-view description"
-             th:text="${issue.specDetail().isBlank()} ? '— empty —' : ${issue.specDetail()}">specification</div>
-        <form class="field-edit" method="post"
-              th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/spec'}"
-              hx-target="#issue-detail" hx-swap="outerHTML">
-            <textarea name="text" rows="8" th:text="${issue.specDetail()}"></textarea>
-            <div class="edit-actions"><button type="submit">Save</button></div>
-        </form>
+        <div class="rich-text" th:if="${!html.isBlank()}" th:utext="${html}">specification</div>
+        <div class="field-view empty" th:if="${html.isBlank()}">— empty —</div>
     </div>
 
-    <div class="field-block editable">
-        <input type="checkbox" class="edit-toggle" id="edit-desc"/>
+    <div class="field-block" th:with="html=${issue.descriptionRichHtml()}">
         <div class="field-head">
             <h3 class="field-title">Description</h3>
-            <label for="edit-desc" class="edit-btn">Edit</label>
-            <label for="edit-desc" class="cancel-btn">Cancel</label>
+            <a class="edit-btn" th:href="${jiraBaseUrl} + '/browse/' + ${issue.key()}"
+               target="_blank" rel="noopener" title="Edit this field in Jira">Edit in Jira ↗</a>
         </div>
-        <div class="field-view description"
-             th:text="${issue.descriptionText().isBlank()} ? '— empty —' : ${issue.descriptionText()}">description</div>
-        <form class="field-edit" method="post"
-              th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/description'}"
-              hx-target="#issue-detail" hx-swap="outerHTML">
-            <textarea name="text" rows="8" th:text="${issue.descriptionText()}"></textarea>
-            <div class="edit-actions"><button type="submit">Save</button></div>
-        </form>
+        <div class="rich-text" th:if="${!html.isBlank()}" th:utext="${html}">description</div>
+        <div class="field-view empty" th:if="${html.isBlank()}">— empty —</div>
     </div>
 
     <section class="comments">
-        <h3>Comments</h3>
+        <div class="field-head">
+            <h3 class="field-title">Comments</h3>
+            <a class="edit-btn" th:href="${commentJiraUrl}"
+               target="_blank" rel="noopener"
+               title="Add a comment with formatting or images in Jira">Comment in Jira ↗</a>
+        </div>
         <form class="add-comment" method="post"
               th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/comment'}"
               hx-target="#issue-detail" hx-swap="outerHTML">

@@ -5,6 +5,7 @@ import com.fnba.kong.config.BoardDef;
 import com.fnba.kong.config.Config;
 import com.fnba.kong.config.Settings;
 import com.fnba.kong.jira.CreateProject;
+import com.fnba.kong.jira.Comment;
 import com.fnba.kong.jira.Issue;
 import com.fnba.kong.jira.JiraClient;
 import com.fnba.kong.jira.JiraUser;
@@ -63,6 +64,7 @@ public class Routes {
         app.get("/board/{slug}", this::board);
         app.get("/kanban/{slug}", this::kanban);
         app.get("/specify-done/{slug}", this::specifyDone);
+        app.get("/attachment/{id}", this::attachment);
         app.get("/search", this::search);
         app.get("/create", this::showCreate);
         app.post("/create", this::doCreate);
@@ -310,6 +312,23 @@ public class Routes {
         ctx.render("kanban.html", model);
     }
 
+    /**
+     * Image proxy for rich-text attachments: the rendered description/comment
+     * HTML points its images here, and Kong fetches the bytes from Jira with its
+     * own credentials (the browser has none). Numeric ids only — the URL Kong
+     * builds is fixed, so there's no SSRF surface.
+     */
+    private void attachment(Context ctx) {
+        String id = ctx.pathParam("id");
+        if (!id.matches("\\d+")) throw new IllegalStateException("Invalid attachment id: " + id);
+        if (!jiraReady()) { ctx.status(404); return; }
+        boolean full = "1".equals(ctx.queryParam("full")) || "true".equalsIgnoreCase(ctx.queryParam("full"));
+        JiraClient.Attachment att = jira.fetchAttachment(id, full);
+        ctx.contentType(att.contentType());
+        ctx.header("Cache-Control", "private, max-age=3600");
+        ctx.result(att.bytes());
+    }
+
     private void search(Context ctx) {
         String jql = ctx.queryParamAsClass("jql", String.class)
                 .getOrDefault("ORDER BY updated DESC");
@@ -527,9 +546,11 @@ public class Routes {
         var sidebarF = async(() -> (board != null && jiraReady())
                 ? sortByStatus(jira.searchBrief(board.jql(), MAX_RESULTS))
                 : List.<Issue>of());
+        List<Comment> comments = join(commsF);
         model.put("issue", join(issueF));
         model.put("transitions", join(transF));
-        model.put("comments", join(commsF));
+        model.put("comments", comments);
+        model.put("commentJiraUrl", commentJiraUrl(key, comments));
         model.put("runs", claude.forIssue(key));
         model.put("sidebarIssues", join(sidebarF));
         model.put("allowedSkills", claude.allowedSkills());
@@ -780,10 +801,12 @@ public class Routes {
         var issueF = async(() -> jira.getIssue(key));
         var transF = async(() -> jira.transitions(key));
         var commsF = async(() -> jira.comments(key));
+        List<Comment> comments = join(commsF);
         Map<String, Object> model = new HashMap<>();
         model.put("issue", join(issueF));
         model.put("transitions", join(transF));
-        model.put("comments", join(commsF));
+        model.put("comments", comments);
+        model.put("commentJiraUrl", commentJiraUrl(key, comments));
         model.put("jiraBaseUrl", jiraBrowseBase());
         return model;
     }
@@ -791,6 +814,20 @@ public class Routes {
     /** Jira site base URL (no trailing slash) for building /browse/ links. */
     private String jiraBrowseBase() {
         return cfg.jiraBaseUrl().replaceAll("/+$", "");
+    }
+
+    /**
+     * The "Comment in Jira" target: the task with {@code focusedCommentId} set to
+     * the newest comment, so Jira scrolls to the top of the comments section
+     * (this instance sorts newest first). Falls back to the bare task when there
+     * are no comments to anchor to.
+     */
+    private String commentJiraUrl(String key, List<Comment> comments) {
+        String url = jiraBrowseBase() + "/browse/" + key;
+        if (comments == null || comments.isEmpty()) return url;
+        // comments() returns root comments newest-first, so the first is the newest.
+        String newest = comments.get(0).id();
+        return (newest == null || newest.isBlank()) ? url : url + "?focusedCommentId=" + newest;
     }
 
     private <T> CompletableFuture<T> async(Supplier<T> task) {

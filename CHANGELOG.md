@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.4] — 2026-07-07
+
+### Added
+- **Rich text on the detail screen.** Description, Specification Details, and
+  comments now render with Jira's own formatting — headings, lists, tables,
+  colors, links, and inline images — instead of flattened plain text. Kong asks
+  Jira for the rendered HTML (`expand=renderedFields` / `renderedBody`),
+  sanitizes it, and streams attachment images through a new `/attachment/{id}`
+  proxy (the browser can't authenticate to Jira; Kong does, following Jira's
+  redirect to the media CDN). Kong's own comment box still posts plain text; a
+  **Comment in Jira ↗** link jumps to the task (scrolled to the comments
+  section) when a comment needs formatting or images.
+
+### Changed
+- **Description & Specification Details are now read-only in Kong**, with an
+  **Edit in Jira ↗** link on each. Editing them here previously flattened all
+  formatting and images on save; authoring rich content stays in Jira for now.
+  (A full in-Kong rich editor is a separate, larger effort, deferred.)
+
 ## [1.1.3] — 2026-07-06
 
 ### Added

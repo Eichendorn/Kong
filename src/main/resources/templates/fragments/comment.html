@@ -6,7 +6,7 @@
         <span class="comment-author" th:text="${c.author()}">Author</span>
         <span class="comment-date" th:text="${c.created()}">date</span>
     </div>
-    <div class="comment-body" th:text="${c.body()}">body</div>
+    <div class="comment-body rich-text" th:utext="${c.bodyRichHtml()}">body</div>
     <ul class="comment-replies" th:if="${c.hasReplies()}">
         <th:block th:each="r : ${c.replies()}">
             <li th:replace="~{fragments/comment :: node(${r})}"></li>

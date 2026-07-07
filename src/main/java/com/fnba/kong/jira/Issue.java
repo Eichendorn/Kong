@@ -36,6 +36,8 @@ public record Issue(
         String specApprover,
         String specDetail,
         String descriptionText,
+        String descriptionHtml,
+        String specDetailHtml,
         String updated,
         Instant statusSince,
         Instant categorySince,
@@ -107,6 +109,8 @@ public record Issue(
                 f.path(SPEC_APPROVER_FIELD).path("displayName").asText(""),
                 extractDescription(f.path(SPEC_DETAIL_FIELD)),
                 extractDescription(f.path("description")),
+                node.path("renderedFields").path("description").asText(""),
+                node.path("renderedFields").path(SPEC_DETAIL_FIELD).asText(""),
                 f.path("updated").asText(""),
                 statusEntry(node),
                 categorySince,
@@ -170,7 +174,8 @@ public record Issue(
     public Issue withTiming(Instant statusSince, Instant boardSince) {
         return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
                 devTester, devTesterUsers, reporter, releaseAuthorizedBy, releaseManager, priority, storyPoints, devChecklists,
-                reasonForTracking, demoScheduledDate, specAuthor, specApprover, specDetail, descriptionText, updated, statusSince, categorySince,
+                reasonForTracking, demoScheduledDate, specAuthor, specApprover, specDetail, descriptionText,
+                descriptionHtml, specDetailHtml, updated, statusSince, categorySince,
                 boardSince, checklistsComplete, raw);
     }
 
@@ -253,6 +258,12 @@ public record Issue(
     public String specAuthorDisplay() {
         return (specAuthor == null || specAuthor.isBlank()) ? "—" : specAuthor;
     }
+
+    /** Description as sanitized, proxy-linked HTML (Jira's own rendering); "" when empty. */
+    public String descriptionRichHtml() { return RichText.render(descriptionHtml); }
+
+    /** Specification Details as sanitized, proxy-linked HTML; "" when empty. */
+    public String specDetailRichHtml() { return RichText.render(specDetailHtml); }
 
     /** Reason for Tracking text, or an em dash when unset. */
     public String reasonForTrackingDisplay() {

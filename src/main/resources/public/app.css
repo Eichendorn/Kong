@@ -387,6 +387,32 @@ dl.meta dt { color: var(--muted); }
 .checklist-links a:hover { text-decoration: none; border-color: var(--accent); }
 .description { white-space: pre-wrap; background: var(--panel-2); border-radius: 8px; padding: 12px; margin: 0; }
 
+/* Jira rich-text fields (description, spec details, comments) rendered as HTML */
+.field-view.empty { color: var(--muted); font-style: italic; }
+.rich-text { background: var(--panel-2); border-radius: 8px; padding: 12px; line-height: 1.5;
+    overflow-wrap: anywhere; }
+.rich-text > :first-child { margin-top: 0; }
+.rich-text > :last-child { margin-bottom: 0; }
+.rich-text p { margin: 8px 0; }
+.rich-text h1, .rich-text h2, .rich-text h3,
+.rich-text h4, .rich-text h5, .rich-text h6 { margin: 14px 0 6px; line-height: 1.25; }
+.rich-text ul, .rich-text ol { margin: 8px 0; padding-left: 22px; }
+.rich-text li { margin: 3px 0; }
+.rich-text a { color: var(--accent); }
+.rich-text img { max-width: 100%; height: auto; border-radius: 6px; margin: 6px 0; display: block; }
+.rich-text blockquote { margin: 8px 0; padding: 4px 12px; border-left: 3px solid var(--border);
+    color: var(--muted); }
+.rich-text code { background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
+    padding: 0 4px; font-size: 12px; }
+.rich-text pre { background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px; overflow-x: auto; }
+.rich-text pre code { background: none; border: 0; padding: 0; }
+.rich-text hr { border: 0; border-top: 1px solid var(--border); margin: 12px 0; }
+/* Tables scroll horizontally inside their own box rather than stretching the page */
+.rich-text table { border-collapse: collapse; margin: 8px 0; display: block; overflow-x: auto; max-width: 100%; }
+.rich-text th, .rich-text td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+.rich-text th { background: var(--panel); }
+
 .head-transition { position: absolute; top: 0; right: 0; display: flex; gap: 6px; }
 .head-transition select { max-width: 220px; }
 
