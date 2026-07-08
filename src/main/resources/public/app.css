@@ -291,6 +291,11 @@ h1 { font-size: 20px; margin: 0 0 4px; color: var(--orange); }
     background: transparent; color: var(--muted); border: none; cursor: pointer; }
 .mu-remove:hover { background: var(--border); color: var(--text); filter: none; }
 .inline-multiuser .ta-input { min-width: 130px; }
+/* "Clear"/"Unassign"/"Clear all" — empty a user field from the inline editor. */
+.inline-clear { margin-left: 6px; padding: 3px 9px; font-size: 12px; line-height: 1.4;
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    border-radius: 4px; cursor: pointer; white-space: nowrap; }
+.inline-clear:hover { background: var(--danger, #b3261e); color: #fff; border-color: transparent; filter: none; }
 
 /* Issue table */
 /* The list scrolls inside this box (vertical + horizontal) so the page itself stays put. */

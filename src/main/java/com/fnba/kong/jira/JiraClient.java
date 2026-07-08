@@ -497,10 +497,11 @@ public class JiraClient {
         editFields(key, fields);
     }
 
-    /** Set the reporter. */
+    /** Set the reporter (blank account id clears it). */
     public void setReporter(String key, String accountId) {
         ObjectNode fields = mapper.createObjectNode();
-        fields.putObject("reporter").put("accountId", accountId.trim());
+        if (notBlank(accountId)) fields.putObject("reporter").put("accountId", accountId.trim());
+        else fields.putNull("reporter");
         editFields(key, fields);
     }
 
@@ -530,6 +531,13 @@ public class JiraClient {
     /** Remove a Dev Tester (multi-user field). */
     public void removeDevTester(String key, String accountId) {
         updateUserList(key, Issue.DEV_TESTER_FIELD, accountId, false);
+    }
+
+    /** Clear every Dev Tester (empty the multi-user field). */
+    public void clearDevTesters(String key) {
+        ObjectNode fields = mapper.createObjectNode();
+        fields.putArray(Issue.DEV_TESTER_FIELD);
+        editFields(key, fields);
     }
 
     /**

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.5] — 2026-07-08
+
+### Added
+- **Clear user fields from the detail screen.** The inline editors for
+  **Assignee**, **Reporter**, **Dev Tester**, **Release Manager**, and **Release
+  Authorized By** now carry a clear control so a field can be emptied, not just
+  reassigned. Assignee shows **Unassign** (the field reverts to Unassigned);
+  the single-user fields show **Clear**; Dev Tester (multi-user) shows **Clear
+  all** when it has entries.
+
 ## [1.1.4] — 2026-07-07
 
 ### Added
