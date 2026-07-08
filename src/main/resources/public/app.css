@@ -82,6 +82,15 @@ a.version:hover { color: var(--text); border-color: var(--accent); text-decorati
     background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer;
 }
 .board-select:hover { border-color: var(--accent); }
+/* Top-bar people filter on the Kanban board. Matches .board-select. */
+.person-select {
+    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer;
+    max-width: 200px;
+}
+.person-select:hover { border-color: var(--accent); }
+/* Signal an active filter — orange border + tint when someone is selected. */
+.person-select.filtered { border-color: var(--accent); background: var(--panel); }
 .nav-settings { padding: 4px 10px; border-radius: 6px; color: var(--muted); white-space: nowrap; }
 .nav-settings:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
 

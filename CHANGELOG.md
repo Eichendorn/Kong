@@ -7,7 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.5] — 2026-07-08
+## [1.1.6] — 2026-07-08
+
+### Added
+- **Filter the Kanban board by person.** A new top-bar picklist lists the people
+  who appear on the board as **Assignee**, **Dev Tester**, or **Release
+  Manager**. Picking a name narrows the board to the cards where that person
+  holds one of those roles; **All people** clears it. The picklist gets an
+  active-filter highlight while a name is selected.
+- **Role matching is status-aware — it follows what the card actually shows.**
+  A person only matches a card through a field the card renders in its current
+  status: Assignee always (it's in every card foot), Dev Tester only in
+  Implement / Ready to Test / Testing / Revisions Pending, and Release Manager
+  only in Ready to Release. So a tester drops off a card once it reaches Ready to
+  Demo, and a release manager doesn't surface until Ready to Release. The
+  picklist honors the same rule, so it never offers a name that would match
+  nothing.
 
 ### Added
 - **Clear user fields from the detail screen.** The inline editors for

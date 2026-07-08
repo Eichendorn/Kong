@@ -251,6 +251,22 @@ public class Routes {
             "Ready to Demo", 2,
             "Testing", 3);
 
+    // People-filter gating: a person only matches a card through a field that the
+    // card actually renders in its current status. These status sets mirror the
+    // th:if conditions on the Kanban card (see kanban.html). The Assignee is shown
+    // on every card, so it always counts.
+    /** Statuses whose card shows the Dev Tester name. */
+    private static final Set<String> TESTER_VISIBLE = Set.of(
+            "Implement", "Ready to Test", "Testing", "Revisions Pending");
+    /** Statuses whose card shows the Release Manager name. */
+    private static final Set<String> RELEASE_MANAGER_VISIBLE = Set.of("Ready to Release");
+
+    /** A Dev Tester only counts while the card displays the Tester field. */
+    private static boolean testerActive(Issue i) { return TESTER_VISIBLE.contains(i.status()); }
+
+    /** A Release Manager only counts while the card displays the Rel Mgr field. */
+    private static boolean releaseManagerActive(Issue i) { return RELEASE_MANAGER_VISIBLE.contains(i.status()); }
+
     /** Kanban view of a board's active items (no backlog, no resolved), grouped into columns. */
     private void kanban(Context ctx) {
         String slug = ctx.pathParam("slug");
@@ -273,6 +289,16 @@ public class Routes {
         model.put("truncated", res.truncated());
         model.put("resultCap", MAX_RESULTS);
         List<Issue> active = res.issues().stream().filter(Issue::isActive).toList();
+        // People filter: the distinct names in the Assignee / Dev Tester / Release
+        // Manager fields across the whole board feed a top-bar picklist; picking one
+        // narrows the board to cards where that person appears in any of those fields.
+        model.put("people", peopleIn(active));
+        String person = ctx.queryParam("person");
+        model.put("selectedPerson", person == null ? "" : person);
+        model.put("showPersonFilter", true);
+        if (person != null && !person.isBlank()) {
+            active = active.stream().filter(i -> matchesPerson(i, person)).toList();
+        }
         // Changelog timing (exact status-since + board-since = Encompass On Deck
         // entry), fetched only for the active cards, overlaid onto each issue.
         Map<String, Timing> timings = jira.issueTimings(
@@ -312,6 +338,45 @@ public class Routes {
         model.put("columns", columns);
         ctx.render("kanban.html", model);
     }
+
+    /** Distinct, case-insensitively sorted names that would match at least one card
+     *  under the same status-aware rules as {@link #matchesPerson} (so the picklist
+     *  never offers a name that filters to nothing). Unassigned/blank skipped. */
+    private static List<String> peopleIn(List<Issue> issues) {
+        Set<String> names = new java.util.TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (Issue i : issues) {
+            if (notBlankName(i.assignee()) && !"Unassigned".equalsIgnoreCase(i.assignee())) {
+                names.add(i.assignee());
+            }
+            if (notBlankName(i.releaseManager()) && releaseManagerActive(i)) {
+                names.add(i.releaseManager());
+            }
+            if (testerActive(i)) {
+                for (JiraUser u : i.devTesterUsers()) {
+                    if (notBlankName(u.displayName())) names.add(u.displayName());
+                }
+            }
+        }
+        return new ArrayList<>(names);
+    }
+
+    /**
+     * True if {@code name} appears on the issue in a currently-relevant role:
+     * as the Assignee (always), the Release Manager (only from Ready to Release
+     * onward), or a Dev Tester (only before Ready to Demo).
+     */
+    private static boolean matchesPerson(Issue i, String name) {
+        if (name.equalsIgnoreCase(i.assignee())) return true;
+        if (releaseManagerActive(i) && name.equalsIgnoreCase(i.releaseManager())) return true;
+        if (testerActive(i)) {
+            for (JiraUser u : i.devTesterUsers()) {
+                if (name.equalsIgnoreCase(u.displayName())) return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean notBlankName(String s) { return s != null && !s.isBlank(); }
 
     /**
      * Image proxy for rich-text attachments: the rendered description/comment

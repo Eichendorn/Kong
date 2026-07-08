@@ -20,6 +20,16 @@
        th:href="@{'/board/' + ${activeSlug}}">WIP List</a>
     <a th:if="${showSpecifyDoneNav}" class="view-toggle nav-specify-done"
        th:href="@{'/specify-done/' + ${activeSlug}}">Specify Done</a>
+    <select th:if="${showPersonFilter}" class="person-select" aria-label="Filter by person"
+            th:classappend="${selectedPerson != null and !selectedPerson.isEmpty()} ? 'filtered' : ''"
+            onchange="window.location.href = this.value;">
+        <option th:value="@{'/kanban/' + ${activeSlug}}"
+                th:selected="${selectedPerson == null or selectedPerson.isEmpty()}">All people</option>
+        <option th:each="p : ${people}"
+                th:value="@{'/kanban/' + ${activeSlug}(person=${p})}"
+                th:text="${p}"
+                th:selected="${p == selectedPerson}">Name</option>
+    </select>
     <details class="nav-menu">
         <summary>Maintenance ▾</summary>
         <div class="nav-menu-items">
