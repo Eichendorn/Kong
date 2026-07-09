@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.8] — 2026-07-09
+
+### Added
+- **The Kanban board refreshes itself after you edit a card.** When you change a
+  card in the detail modal — a field edit, a workflow transition, a comment —
+  and then close it, the board reloads so it reflects the change instead of
+  showing stale data. The card you were on stays spotlighted, and the active
+  board/person filter is preserved. Closing a card you didn't change does
+  nothing (no needless reload). The WIP List already reloads on its own, since
+  it opens cards as full pages.
+- **Kanban and WIP List toggles on the Recent Transitions screen.** The
+  transitions log now carries the same top-bar view toggles as the boards, so
+  you can jump straight back to the Kanban board or the WIP List instead of
+  routing through the Maintenance menu.
+
+### Changed
+- **Kanban is now the app's default screen.** Opening Kong (and clicking the
+  "Kong" title in the top bar) lands on the Kanban board rather than the WIP
+  List.
+
 ## [1.1.7] — 2026-07-09
 
 ### Added

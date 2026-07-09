@@ -58,7 +58,7 @@ public class Routes {
     public void register(Javalin app) {
         app.get("/", ctx -> {
             List<BoardDef> boards = cfg.boards();
-            ctx.redirect(boards.isEmpty() ? "/search" : "/board/" + boards.get(0).slug());
+            ctx.redirect(boards.isEmpty() ? "/search" : "/kanban/" + boards.get(0).slug());
         });
 
         app.get("/board/{slug}", this::board);
@@ -431,10 +431,16 @@ public class Routes {
 
     /** Maintenance → Recent Transitions: a newest-first log of status changes. */
     private void showTransitions(Context ctx) {
-        Map<String, Object> model = baseModel(null);
+        List<BoardDef> boards = cfg.boards();
+        String slug = boards.isEmpty() ? "" : boards.get(0).slug();
+        Map<String, Object> model = baseModel(slug);
         model.put("title", "Recent Transitions");
-        String jql = cfg.boards().isEmpty()
-                ? "ORDER BY updated DESC" : cfg.boards().get(0).jql();
+        if (!slug.isEmpty()) {   // wire the Kanban / WIP List toggles to the default board
+            model.put("showKanbanNav", true);
+            model.put("showListNav", true);
+        }
+        String jql = boards.isEmpty()
+                ? "ORDER BY updated DESC" : boards.get(0).jql();
         model.put("logs", jiraReady() ? jira.recentTransitions(jql, 50) : List.<TransitionLog>of());
         ctx.render("recent_transitions.html", model);
     }

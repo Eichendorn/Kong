@@ -147,21 +147,50 @@
         if (!wasSelected) card.classList.add('selected');
     }
     // Double click opens the detail modal and leaves the card selected.
+    // Track whether the open card was actually saved, and which card it is, so
+    // closing a card that changed can refresh the (otherwise stale) board.
+    var cardDirty = false;
+    var openCardKey = null;
     function openIssueModal(el) {
         var card = el && el.closest('.kanban-card');
         clearHighlight();
         clearSelection();
         if (card) card.classList.add('selected');
         var key = el && el.getAttribute('data-key');
+        cardDirty = false;
+        openCardKey = key;
         var link = document.getElementById('modal-open-tab');
         if (link && key) link.href = '/issue/' + key;
         document.getElementById('issue-modal').hidden = false;
         document.body.style.overflow = 'hidden';
     }
+    // Any successful non-GET request while the modal is open is a save (field
+    // edit, transition, comment, …). GET-only traffic (loading editors, type-ahead
+    // suggestions, restoring the read-only view) never marks the card dirty.
+    // Listen on document.body: user-field saves fire via htmx.ajax() with no
+    // source element, so htmx dispatches their events on the body rather than
+    // inside #issue-modal-body — a body listener catches both those and the
+    // attribute-based hx-post edits that bubble up from within the modal.
+    document.body.addEventListener('htmx:afterRequest', function (e) {
+        if (document.getElementById('issue-modal').hidden) return;
+        var cfg = e.detail && e.detail.requestConfig;
+        if (cfg && e.detail.successful && cfg.verb && cfg.verb.toLowerCase() !== 'get') {
+            cardDirty = true;
+        }
+    });
     function closeIssueModal() {
         document.getElementById('issue-modal').hidden = true;
         document.getElementById('issue-modal-body').innerHTML = '';
         document.body.style.overflow = '';
+        // The board behind the modal is now stale — reload it, re-spotlighting the
+        // card we just edited and keeping the current board/person filter (both
+        // already live in the URL).
+        if (cardDirty) {
+            cardDirty = false;
+            var url = new URL(window.location.href);
+            if (openCardKey) url.searchParams.set('highlight', openCardKey);
+            window.location.assign(url.toString());
+        }
     }
     function jumpToComments() {
         var c = document.querySelector('#issue-modal-body .comments');
