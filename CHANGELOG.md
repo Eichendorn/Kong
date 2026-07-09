@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.7] — 2026-07-09
+
+### Added
+- **King Kong brand mark in the top bar.** A gorilla image (recolored from a
+  source painting to the app's orange theme, grass kept green) sits as a square
+  in the top-left corner of the top bar, flush to the top, bottom, and left
+  edges, just left of the "Kong" wordmark.
+
+### Changed
+- **New favicon.** The browser-tab icon is now a stylized gorilla *head* —
+  greyscale gorilla on an orange background, cropped from the same source and
+  reduced to just orange + greyscale. Replaces the orange "K" glyph across all
+  pages (64×64 PNG).
+
 ## [1.1.6] — 2026-07-08
 
 ### Added
