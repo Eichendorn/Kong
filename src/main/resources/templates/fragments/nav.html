@@ -37,6 +37,12 @@
         </div>
     </details>
     <a class="nav-settings" href="/settings" title="Settings">⚙ Settings</a>
+    <span th:if="${currentUserName != null and !currentUserName.isEmpty()}"
+          class="nav-user" th:title="'Signed in to Jira as ' + ${currentUserName}">
+        <img class="nav-user-avatar" src="/me/avatar" alt="" aria-hidden="true"
+             onerror="this.remove()"/>
+        <span th:text="${currentUserName}">Name</span>
+    </span>
 </header>
 </body>
 </html>

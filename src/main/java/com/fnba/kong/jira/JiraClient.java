@@ -298,10 +298,13 @@ public class JiraClient {
         }
     }
 
-    /** The authenticated user (used to default the Reporter on new issues). */
+    /** The authenticated user (used to default the Reporter on new issues and
+     *  shown in the top bar). Cached — the token's identity doesn't change. */
     public JiraUser currentUser() {
-        JsonNode u = get(baseUrl + "/rest/api/3/myself");
-        return new JiraUser(u.path("accountId").asText(""), u.path("displayName").asText(""));
+        return cached("meta:myself", META_TTL_MS, () -> {
+            JsonNode u = get(baseUrl + "/rest/api/3/myself");
+            return new JiraUser(u.path("accountId").asText(""), u.path("displayName").asText(""));
+        });
     }
 
     /**
@@ -662,6 +665,37 @@ public class JiraClient {
         } catch (Exception e) {
             throw new JiraException(0, "Attachment fetch failed: " + url + " (" + e.getMessage() + ")");
         }
+    }
+
+    /**
+     * The authenticated user's avatar bytes, proxied so the browser (which has no
+     * Jira credentials) can show it. Cached — the avatar rarely changes. Jira
+     * Cloud avatar URLs live on external CDNs (gravatar / atl-paas public), so we
+     * only present the API token when the URL is actually on the Jira host,
+     * never leaking it to a third party.
+     */
+    public Attachment currentUserAvatar() {
+        return cached("meta:myself:avatar", META_TTL_MS, () -> {
+            try {
+                JsonNode u = get(baseUrl + "/rest/api/3/myself");
+                JsonNode urls = u.path("avatarUrls");
+                String avatarUrl = urls.path("48x48").asText("");
+                if (avatarUrl.isEmpty()) avatarUrl = urls.path("32x32").asText("");
+                if (avatarUrl.isEmpty()) throw new JiraException(404, "No avatar URL in myself");
+                HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(avatarUrl))
+                        .timeout(Duration.ofSeconds(30)).GET();
+                if (avatarUrl.startsWith(baseUrl)) b.header("Authorization", authHeader);
+                HttpResponse<byte[]> resp = httpRedirect.send(b.build(), HttpResponse.BodyHandlers.ofByteArray());
+                int sc = resp.statusCode();
+                if (sc < 200 || sc >= 300) throw new JiraException(sc, "avatar GET -> HTTP " + sc);
+                String ct = resp.headers().firstValue("Content-Type").orElse("image/png");
+                return new Attachment(resp.body(), ct);
+            } catch (JiraException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new JiraException(0, "Avatar fetch failed (" + e.getMessage() + ")");
+            }
+        });
     }
 
     // ---- HTTP plumbing -----------------------------------------------------

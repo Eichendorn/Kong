@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.9] — 2026-07-10
+
+### Added
+- **The logged-in Jira user now shows at the far right of the top bar** — their
+  avatar and display name, on every page. Kong reads the account from Jira's
+  `/myself` endpoint (the identity of the configured API token) and caches it.
+  The avatar is proxied through Kong (`/me/avatar`) because the browser has no
+  Jira credentials; the API token is only ever sent to the Jira host itself,
+  never to the external avatar CDNs. If the avatar can't be loaded the name
+  stands on its own.
+
 ## [1.1.8] — 2026-07-09
 
 ### Added

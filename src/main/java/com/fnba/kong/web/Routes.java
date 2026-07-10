@@ -65,6 +65,7 @@ public class Routes {
         app.get("/kanban/{slug}", this::kanban);
         app.get("/specify-done/{slug}", this::specifyDone);
         app.get("/attachment/{id}", this::attachment);
+        app.get("/me/avatar", this::currentAvatar);
         app.get("/search", this::search);
         app.get("/create", this::showCreate);
         app.post("/create", this::doCreate);
@@ -393,6 +394,19 @@ public class Routes {
         ctx.contentType(att.contentType());
         ctx.header("Cache-Control", "private, max-age=3600");
         ctx.result(att.bytes());
+    }
+
+    /** Proxy the logged-in user's Jira avatar for the top bar. */
+    private void currentAvatar(Context ctx) {
+        if (!jiraReady()) { ctx.status(404); return; }
+        try {
+            JiraClient.Attachment a = jira.currentUserAvatar();
+            ctx.contentType(a.contentType());
+            ctx.header("Cache-Control", "private, max-age=3600");
+            ctx.result(a.bytes());
+        } catch (Exception e) {
+            ctx.status(404);
+        }
     }
 
     private void search(Context ctx) {
@@ -936,11 +950,24 @@ public class Routes {
         model.put("jiraReady", jiraReady());
         model.put("jiraBaseUrl", jiraBrowseBase());
         model.put("version", Config.appVersion());
+        model.put("currentUserName", currentUserName());
         return model;
     }
 
     private boolean jiraReady() {
         return jira != null;
+    }
+
+    /** Display name of the Jira account Kong is authenticated as, for the top
+     *  bar. Cached in JiraClient; defensive so a myself hiccup never breaks a page. */
+    private String currentUserName() {
+        if (!jiraReady()) return "";
+        try {
+            JiraUser me = jira.currentUser();
+            return me == null ? "" : me.displayName();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private static String escape(String s) {
