@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.10] — 2026-07-10
+
+### Fixed
+- **Square brackets in rich-text fields no longer look like errors.** Jira's
+  wiki renderer treats `[text]` as a link and, when it can't resolve one (e.g.
+  field codes like `[CX.VLINDICATOR]`), wraps it in `<span class="error">` —
+  which collided with Kong's own red `.error` banner style and made the
+  bracketed text look highlighted. Kong now unwraps those spans so brackets
+  render as plain text.
+- **Low-contrast colored text in rich-text fields is now readable.** Jira's text
+  colors and highlights are chosen for a white page, so a dark color (its blue
+  `#0747a6`, dark red, …) could sink into Kong's dark panel. Kong now measures
+  each inline color's WCAG contrast against the background it sits on and, when
+  it's too faint, shifts the color's lightness — keeping its hue — until it's
+  legible. Works for any color, and also darkens the default light text when it
+  lands on a light highlight.
+
 ## [1.1.9] — 2026-07-10
 
 ### Added
