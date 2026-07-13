@@ -88,6 +88,9 @@ public class Routes {
         app.post("/issue/{key}/devtester/add", this::doDevTesterAdd);
         app.post("/issue/{key}/devtester/remove/{accountId}", this::doDevTesterRemove);
         app.post("/issue/{key}/devtester/clear", this::doDevTesterClear);
+        app.post("/issue/{key}/specauthor/add", this::doSpecAuthorAdd);
+        app.post("/issue/{key}/specauthor/remove/{accountId}", this::doSpecAuthorRemove);
+        app.post("/issue/{key}/specauthor/clear", this::doSpecAuthorClear);
         app.post("/issue/{key}/transition", this::doTransition);
         app.post("/issue/{key}/description", this::doDescription);
         app.post("/issue/{key}/spec", this::doSpec);
@@ -730,6 +733,7 @@ public class Routes {
                 model.put("current", issue.priority());
             }
             case "devtester" -> model.put("devTesters", issue.devTesterUsers());
+            case "specauthor" -> model.put("specAuthors", issue.specAuthorUsers());
             default -> { /* assignee/reporter: a type-ahead, no options to preload */ }
         }
         ctx.render("fragments/inline_edit.html", model);
@@ -802,6 +806,25 @@ public class Routes {
     private void doDevTesterClear(Context ctx) {
         String key = ctx.pathParam("key");
         jira.clearDevTesters(key);
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doSpecAuthorAdd(Context ctx) {
+        String key = ctx.pathParam("key");
+        String accountId = ctx.formParam("accountId");
+        if (accountId != null && !accountId.isBlank()) jira.addSpecAuthor(key, accountId);
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doSpecAuthorRemove(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.removeSpecAuthor(key, ctx.pathParam("accountId"));
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doSpecAuthorClear(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.clearSpecAuthors(key);
         renderDetailFragment(ctx, key);
     }
 

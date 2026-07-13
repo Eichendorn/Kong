@@ -543,6 +543,23 @@ public class JiraClient {
         editFields(key, fields);
     }
 
+    /** Add a Specification Author (multi-user field) via an incremental update operation. */
+    public void addSpecAuthor(String key, String accountId) {
+        updateUserList(key, Issue.SPEC_AUTHOR_FIELD, accountId, true);
+    }
+
+    /** Remove a Specification Author (multi-user field). */
+    public void removeSpecAuthor(String key, String accountId) {
+        updateUserList(key, Issue.SPEC_AUTHOR_FIELD, accountId, false);
+    }
+
+    /** Clear every Specification Author (empty the multi-user field). */
+    public void clearSpecAuthors(String key) {
+        ObjectNode fields = mapper.createObjectNode();
+        fields.putArray(Issue.SPEC_AUTHOR_FIELD);
+        editFields(key, fields);
+    }
+
     /**
      * Add or remove one user from a multi-user-picker field using the issue
      * "update" operations, so the rest of the list is left untouched.

@@ -47,49 +47,58 @@
                   th:text="${issue.resolution().isBlank()} ? 'Unresolved' : ${issue.resolution()}">Done</span>
         </h1>
         <h2 th:text="${issue.summary()}">summary</h2>
-        <dl class="meta">
-            <dt>Type</dt>
-            <dd><span class="inline-edit" title="Click to edit"
-                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/type'}"
-                      hx-target="closest dd" hx-swap="innerHTML"
-                      th:text="${issue.issueType()}">Task</span></dd>
-            <dt>Assignee</dt>
-            <dd><span class="inline-edit" title="Click to edit"
-                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/assignee'}"
-                      hx-target="closest dd" hx-swap="innerHTML"
-                      th:classappend="${issue.assignee() == 'Unassigned'} ? 'unassigned' : ''"
-                      th:text="${issue.assignee()}">Assignee</span></dd>
-            <dt>Reporter</dt>
-            <dd><span class="inline-edit" title="Click to edit"
-                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/reporter'}"
-                      hx-target="closest dd" hx-swap="innerHTML"
-                      th:text="${issue.reporter()}">Reporter</span></dd>
-            <dt>Priority</dt>
-            <dd><span class="inline-edit" title="Click to edit"
-                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/priority'}"
-                      hx-target="closest dd" hx-swap="innerHTML"
-                      th:text="${issue.priority()}">Priority</span></dd>
-            <dt>Dev Tester</dt>
-            <dd><span class="inline-edit" title="Click to edit"
-                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/devtester'}"
-                      hx-target="closest dd" hx-swap="innerHTML"
-                      th:text="${issue.devTesterDisplay()}">Dev Tester</span></dd>
-            <dt>Release Manager</dt>
-            <dd><span class="inline-edit" title="Click to edit"
-                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/releasemanager'}"
-                      hx-target="closest dd" hx-swap="innerHTML"
-                      th:text="${issue.releaseManagerDisplay()}">Release Manager</span></dd>
-            <dt>Release Authorized By</dt>
-            <dd><span class="inline-edit" title="Click to edit"
-                      th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/releaseauthorizedby'}"
-                      hx-target="closest dd" hx-swap="innerHTML"
-                      th:text="${issue.releaseAuthorizedByDisplay()}">Release Authorized By</span></dd>
-            <dt>Dev Checklists</dt>
-            <dd>
-                <span th:if="${issue.checklistsComplete()}" class="badge badge-yes">Complete</span>
-                <span th:unless="${issue.checklistsComplete()}" class="badge badge-no">Incomplete</span>
-            </dd>
-        </dl>
+        <div class="meta-columns">
+            <dl class="meta">
+                <dt>Dev Checklists</dt>
+                <dd>
+                    <span th:if="${issue.checklistsComplete()}" class="badge badge-yes">Complete</span>
+                    <span th:unless="${issue.checklistsComplete()}" class="badge badge-no">Incomplete</span>
+                </dd>
+                <dt>Assignee</dt>
+                <dd><span class="inline-edit" title="Click to edit"
+                          th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/assignee'}"
+                          hx-target="closest dd" hx-swap="innerHTML"
+                          th:classappend="${issue.assignee() == 'Unassigned'} ? 'unassigned' : ''"
+                          th:text="${issue.assignee()}">Assignee</span></dd>
+                <dt>Reporter</dt>
+                <dd><span class="inline-edit" title="Click to edit"
+                          th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/reporter'}"
+                          hx-target="closest dd" hx-swap="innerHTML"
+                          th:text="${issue.reporter()}">Reporter</span></dd>
+                <dt>Specification Author</dt>
+                <dd><span class="inline-edit" title="Click to edit"
+                          th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/specauthor'}"
+                          hx-target="closest dd" hx-swap="innerHTML"
+                          th:text="${issue.specAuthorDisplay()}">Specification Author</span></dd>
+                <dt>Dev Tester</dt>
+                <dd><span class="inline-edit" title="Click to edit"
+                          th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/devtester'}"
+                          hx-target="closest dd" hx-swap="innerHTML"
+                          th:text="${issue.devTesterDisplay()}">Dev Tester</span></dd>
+            </dl>
+            <dl class="meta">
+                <dt>Type</dt>
+                <dd><span class="inline-edit" title="Click to edit"
+                          th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/type'}"
+                          hx-target="closest dd" hx-swap="innerHTML"
+                          th:text="${issue.issueType()}">Task</span></dd>
+                <dt>Priority</dt>
+                <dd><span class="inline-edit" title="Click to edit"
+                          th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/priority'}"
+                          hx-target="closest dd" hx-swap="innerHTML"
+                          th:text="${issue.priority()}">Priority</span></dd>
+                <dt>Release Authorized By</dt>
+                <dd><span class="inline-edit" title="Click to edit"
+                          th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/releaseauthorizedby'}"
+                          hx-target="closest dd" hx-swap="innerHTML"
+                          th:text="${issue.releaseAuthorizedByDisplay()}">Release Authorized By</span></dd>
+                <dt>Release Manager</dt>
+                <dd><span class="inline-edit" title="Click to edit"
+                          th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/releasemanager'}"
+                          hx-target="closest dd" hx-swap="innerHTML"
+                          th:text="${issue.releaseManagerDisplay()}">Release Manager</span></dd>
+            </dl>
+        </div>
     </div>
 
     <div class="field-block" th:if="${!issue.devChecklists().isEmpty()}">

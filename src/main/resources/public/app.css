@@ -389,6 +389,9 @@ body.issue-body .topbar { flex: 0 0 auto; }
 .detail-head h2 { font-size: 16px; font-weight: 500; margin: 4px 0 12px; }
 dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 0; }
 dl.meta dt { color: var(--muted); }
+/* Two side-by-side columns of detail fields; wraps to one column when narrow. */
+.meta-columns { display: flex; flex-wrap: wrap; gap: 4px 40px; align-items: start; }
+.meta-columns > dl.meta { flex: 1 1 220px; }
 .field-block { margin: 14px 0; }
 .field-title { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 

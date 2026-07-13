@@ -33,6 +33,7 @@ public record Issue(
         String reasonForTracking,
         String demoScheduledDate,
         String specAuthor,
+        List<JiraUser> specAuthorUsers,
         String specApprover,
         String specDetail,
         String descriptionText,
@@ -106,6 +107,7 @@ public record Issue(
                 extractDescription(f.path(REASON_FOR_TRACKING_FIELD)),
                 f.path(DEMO_SCHEDULED_DATE_FIELD).asText(""),
                 extractUserNames(f.path(SPEC_AUTHOR_FIELD)),
+                extractUsers(f.path(SPEC_AUTHOR_FIELD)),
                 f.path(SPEC_APPROVER_FIELD).path("displayName").asText(""),
                 extractDescription(f.path(SPEC_DETAIL_FIELD)),
                 extractDescription(f.path("description")),
@@ -174,7 +176,7 @@ public record Issue(
     public Issue withTiming(Instant statusSince, Instant boardSince) {
         return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
                 devTester, devTesterUsers, reporter, releaseAuthorizedBy, releaseManager, priority, storyPoints, devChecklists,
-                reasonForTracking, demoScheduledDate, specAuthor, specApprover, specDetail, descriptionText,
+                reasonForTracking, demoScheduledDate, specAuthor, specAuthorUsers, specApprover, specDetail, descriptionText,
                 descriptionHtml, specDetailHtml, updated, statusSince, categorySince,
                 boardSince, checklistsComplete, raw);
     }

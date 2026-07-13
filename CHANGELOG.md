@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.12] — 2026-07-13
+
+### Added
+- **Specification Author is now an editable detail field.** It appears in the
+  issue detail/modal and edits like Dev Tester — a multi-user picker with
+  removable chips, a type-ahead to add people, and "Clear all".
+
+### Changed
+- **Detail fields are laid out in two columns.** Left: Dev Checklists,
+  Assignee, Reporter, Specification Author, Dev Tester. Right: Type, Priority,
+  Release Authorized By, Release Manager. The columns collapse to one when the
+  pane is narrow.
+
 ## [1.1.11] — 2026-07-13
 
 ### Changed
