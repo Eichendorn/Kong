@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.11] — 2026-07-13
+
+### Changed
+- **Reason for Tracking is subtly flagged red on the issue detail.** On
+  `Track`-status issues, the Reason for Tracking field now shows a faint red
+  tint on its value box and a red title, so it stands out from the other
+  fields without being loud.
+
 ## [1.1.10] — 2026-07-10
 
 ### Fixed

@@ -101,7 +101,7 @@
         </ul>
     </div>
 
-    <div class="field-block editable" th:if="${issue.status() == 'Track'}">
+    <div class="field-block editable field-tracking" th:if="${issue.status() == 'Track'}">
         <input type="checkbox" class="edit-toggle" id="edit-tracking"/>
         <div class="field-head">
             <h3 class="field-title">Reason for Tracking</h3>

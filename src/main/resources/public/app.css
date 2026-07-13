@@ -412,6 +412,13 @@ dl.meta dt { color: var(--muted); }
 .checklist-links a:hover { text-decoration: none; border-color: var(--accent); }
 .description { white-space: pre-wrap; background: var(--panel-2); border-radius: 8px; padding: 12px; margin: 0; }
 
+/* Reason for Tracking — subtly flagged red so it stands out on tracked items. */
+.field-tracking .field-title { color: var(--red); }
+.field-tracking .field-view.description,
+.field-tracking .field-edit textarea {
+    background: rgba(237, 66, 69, 0.10);
+}
+
 /* Jira rich-text fields (description, spec details, comments) rendered as HTML */
 .field-view.empty { color: var(--muted); font-style: italic; }
 .rich-text { background: var(--panel-2); border-radius: 8px; padding: 12px; line-height: 1.5;
