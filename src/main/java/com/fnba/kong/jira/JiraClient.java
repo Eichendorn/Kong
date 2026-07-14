@@ -518,6 +518,11 @@ public class JiraClient {
         setSingleUserField(key, Issue.RELEASE_AUTHORIZED_BY_FIELD, accountId);
     }
 
+    /** Set the Specification Approver (single-user custom field; blank clears it). */
+    public void setSpecApprover(String key, String accountId) {
+        setSingleUserField(key, Issue.SPEC_APPROVER_FIELD, accountId);
+    }
+
     /** Set a single-user-picker custom field by accountId; a blank value clears it. */
     private void setSingleUserField(String key, String fieldId, String accountId) {
         ObjectNode fields = mapper.createObjectNode();

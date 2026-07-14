@@ -70,6 +70,11 @@
                           th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/specauthor'}"
                           hx-target="closest dd" hx-swap="innerHTML"
                           th:text="${issue.specAuthorDisplay()}">Specification Author</span></dd>
+                <dt>Specification Approver</dt>
+                <dd><span class="inline-edit" title="Click to edit"
+                          th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/specapprover'}"
+                          hx-target="closest dd" hx-swap="innerHTML"
+                          th:text="${issue.specApproverDisplay()}">Specification Approver</span></dd>
                 <dt>Dev Tester</dt>
                 <dd><span class="inline-edit" title="Click to edit"
                           th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/devtester'}"
@@ -87,6 +92,10 @@
                           th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/priority'}"
                           hx-target="closest dd" hx-swap="innerHTML"
                           th:text="${issue.priority()}">Priority</span></dd>
+                <dt>Labels</dt>
+                <dd><span th:text="${issue.labelsDisplay()}">labels</span>
+                    <a class="edit-btn" th:href="${jiraBaseUrl} + '/browse/' + ${issue.key()}"
+                       target="_blank" rel="noopener" title="Edit labels in Jira">Edit in Jira ↗</a></dd>
                 <dt>Release Authorized By</dt>
                 <dd><span class="inline-edit" title="Click to edit"
                           th:attr="hx-get=@{'/issue/' + ${issue.key()} + '/edit/releaseauthorizedby'}"

@@ -85,6 +85,7 @@ public class Routes {
         app.post("/issue/{key}/reporter", this::doReporter);
         app.post("/issue/{key}/releasemanager", this::doReleaseManager);
         app.post("/issue/{key}/releaseauthorizedby", this::doReleaseAuthorizedBy);
+        app.post("/issue/{key}/specapprover", this::doSpecApprover);
         app.post("/issue/{key}/devtester/add", this::doDevTesterAdd);
         app.post("/issue/{key}/devtester/remove/{accountId}", this::doDevTesterRemove);
         app.post("/issue/{key}/devtester/clear", this::doDevTesterClear);
@@ -781,6 +782,12 @@ public class Routes {
     private void doReleaseManager(Context ctx) {
         String key = ctx.pathParam("key");
         jira.setReleaseManager(key, ctx.formParam("accountId"));
+        renderDetailFragment(ctx, key);
+    }
+
+    private void doSpecApprover(Context ctx) {
+        String key = ctx.pathParam("key");
+        jira.setSpecApprover(key, ctx.formParam("accountId"));
         renderDetailFragment(ctx, key);
     }
 

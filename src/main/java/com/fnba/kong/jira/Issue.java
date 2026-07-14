@@ -35,6 +35,7 @@ public record Issue(
         String specAuthor,
         List<JiraUser> specAuthorUsers,
         String specApprover,
+        List<String> labels,
         String specDetail,
         String descriptionText,
         String descriptionHtml,
@@ -109,6 +110,7 @@ public record Issue(
                 extractUserNames(f.path(SPEC_AUTHOR_FIELD)),
                 extractUsers(f.path(SPEC_AUTHOR_FIELD)),
                 f.path(SPEC_APPROVER_FIELD).path("displayName").asText(""),
+                extractLabels(f.path("labels")),
                 extractDescription(f.path(SPEC_DETAIL_FIELD)),
                 extractDescription(f.path("description")),
                 node.path("renderedFields").path("description").asText(""),
@@ -176,7 +178,7 @@ public record Issue(
     public Issue withTiming(Instant statusSince, Instant boardSince) {
         return new Issue(key, summary, status, statusCategory, resolution, issueType, assignee,
                 devTester, devTesterUsers, reporter, releaseAuthorizedBy, releaseManager, priority, storyPoints, devChecklists,
-                reasonForTracking, demoScheduledDate, specAuthor, specAuthorUsers, specApprover, specDetail, descriptionText,
+                reasonForTracking, demoScheduledDate, specAuthor, specAuthorUsers, specApprover, labels, specDetail, descriptionText,
                 descriptionHtml, specDetailHtml, updated, statusSince, categorySince,
                 boardSince, checklistsComplete, raw);
     }
@@ -255,6 +257,9 @@ public record Issue(
     public String specApproverDisplay() {
         return (specApprover == null || specApprover.isBlank()) ? "—" : specApprover;
     }
+    public String labelsDisplay() {
+        return (labels == null || labels.isEmpty()) ? "—" : String.join(", ", labels);
+    }
 
     /** Specification Author name(s), or an em dash when unset. */
     public String specAuthorDisplay() {
@@ -295,6 +300,18 @@ public record Issue(
             for (JsonNode u : arr) {
                 String id = u.path("accountId").asText("");
                 if (!id.isEmpty()) out.add(new JiraUser(id, u.path("displayName").asText("")));
+            }
+        }
+        return out;
+    }
+
+    /** The plain-string labels array. */
+    private static List<String> extractLabels(JsonNode arr) {
+        List<String> out = new ArrayList<>();
+        if (arr != null && arr.isArray()) {
+            for (JsonNode l : arr) {
+                String s = l.asText("");
+                if (!s.isBlank()) out.add(s);
             }
         }
         return out;

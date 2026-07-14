@@ -380,18 +380,21 @@ body.issue-body .topbar { flex: 0 0 auto; }
 .mini-summary { display: block; font-size: 13px; line-height: 1.3; }
 .issue-main { flex: 1; min-width: 0; overflow-y: auto; padding-right: 4px; }
 .detail { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
-.detail-head { position: relative; padding-right: 300px; }
-.detail-head h1 { display: flex; align-items: center; gap: 10px; }
+.detail-head { position: relative; }
+/* Reserve room for the top-right transition dropdown on the title lines only,
+   so the field columns below it can use the full pane width. */
+.detail-head h1 { display: flex; align-items: center; gap: 10px; padding-right: 300px; }
 .detail-head h1 .status { font-size: inherit; }
 .detail-head h1 .resolution { font-size: 12px; padding: 2px 9px; border-radius: 10px;
     background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
     align-self: center; }
-.detail-head h2 { font-size: 16px; font-weight: 500; margin: 4px 0 12px; }
+.detail-head h2 { font-size: 16px; font-weight: 500; margin: 4px 0 12px; padding-right: 300px; }
 dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 0; }
 dl.meta dt { color: var(--muted); }
 /* Two side-by-side columns of detail fields; wraps to one column when narrow. */
 .meta-columns { display: flex; flex-wrap: wrap; gap: 4px 40px; align-items: start; }
 .meta-columns > dl.meta { flex: 1 1 220px; }
+dl.meta .edit-btn { margin-left: 8px; white-space: nowrap; }
 .field-block { margin: 14px 0; }
 .field-title { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 

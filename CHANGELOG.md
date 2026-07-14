@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.13] — 2026-07-14
+
+### Added
+- **Specification Approver detail field** — a single-user, inline-editable
+  field shown under Specification Author (type-ahead to set, Clear to empty).
+- **Labels detail field** — shows the issue's labels with an "Edit in Jira ↗"
+  link (labels are edited in Jira).
+
+### Fixed
+- **Detail field columns now use the full pane width.** The top-right
+  transition dropdown had reserved 300px down the entire detail head, needlessly
+  squeezing every field row below it. That reservation now applies only to the
+  title lines, so the two-column field layout stretches into the previously
+  wasted space and long rows (e.g. Labels + its link) fit on one line.
+
 ## [1.1.12] — 2026-07-13
 
 ### Added
