@@ -68,6 +68,36 @@ a.version:hover { color: var(--text); border-color: var(--accent); text-decorati
 .back-link:hover { color: var(--text); text-decoration: none; }
 .history-title { font-size: 20px; margin: 0 0 6px; }
 .changelog { max-width: 760px; line-height: 1.55; }
+
+/* Workflow-diagram screen (Maintenance → Workflow Diagram) */
+/* Use the full window width (override the .content max-width cap). */
+.content.workflow-main { max-width: none; }
+.workflow-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 4px; }
+.workflow-title { font-size: 20px; margin: 0; }
+.workflow-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 16px;
+    margin: 8px 0 16px; padding: 0; font-size: 12px; color: var(--muted); }
+.workflow-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.wf-swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; border: 1px solid; }
+.wf-swatch.wf-todo { background: #3a3d44; border-color: #5a5d64; }
+.wf-swatch.wf-prog { background: #2a3a52; border-color: #3f5578; }
+.wf-swatch.wf-done { background: #1f3a2a; border-color: #2f5a40; }
+.wf-swatch.wf-any  { background: #454851; border-color: #9aa0a6; border-style: dashed; }
+.workflow-diagram { background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px; overflow: auto; }
+.workflow-diagram .mermaid { margin: 0; }
+/* Fit to the container width by default; the zoom control sets an inline width
+   (which overrides this) to scale up or down. Height follows by aspect ratio. */
+.workflow-diagram .mermaid svg { width: 100%; max-width: none; height: auto; }
+
+/* Zoom toolbar */
+.wf-zoom { display: inline-flex; align-items: center; gap: 4px; margin: 0 0 10px; }
+.wf-zoom button { width: 30px; height: 28px; padding: 0; border: 1px solid var(--border);
+    background: var(--panel-2); color: var(--text); font: inherit; font-size: 15px;
+    line-height: 1; border-radius: 6px; cursor: pointer; }
+.wf-zoom button#wf-fit { width: auto; padding: 0 10px; font-size: 13px; }
+.wf-zoom button:hover { border-color: var(--accent); }
+.wf-zoom #wf-level { min-width: 46px; text-align: center; font-size: 12px;
+    color: var(--muted); font-variant-numeric: tabular-nums; }
 .changelog h1 { font-size: 20px; margin: 18px 0 8px; }
 .changelog h2 { font-size: 16px; margin: 22px 0 8px; padding-bottom: 4px;
     border-bottom: 1px solid var(--border); }

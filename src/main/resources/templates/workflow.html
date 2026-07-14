@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Kong — Workflow Diagram</title>
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"/>
+    <link rel="stylesheet" href="/app.css"/>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content workflow-main">
+    <a class="back-link" href="/">&larr; Back</a>
+    <div class="workflow-head">
+        <h1 class="workflow-title" th:text="${workflowName} ?: 'Workflow Diagram'">Workflow</h1>
+        <a class="edit-btn" th:if="${workflowId != null}"
+           th:href="${jiraBaseUrl} + '/jira/settings/issues/workflows/' + ${workflowId}"
+           target="_blank" rel="noopener" title="Open this workflow in Jira admin">Open in Jira ↗</a>
+    </div>
+
+    <ul class="workflow-legend">
+        <li><span class="wf-swatch wf-todo"></span> To Do</li>
+        <li><span class="wf-swatch wf-prog"></span> In Progress</li>
+        <li><span class="wf-swatch wf-done"></span> Done</li>
+        <li><span class="wf-swatch wf-any"></span> Any status (global transition)</li>
+    </ul>
+
+    <div class="wf-zoom" th:if="${mermaid != null}" role="group" aria-label="Zoom">
+        <button type="button" id="wf-out" title="Zoom out">&minus;</button>
+        <span id="wf-level" aria-live="polite">100%</span>
+        <button type="button" id="wf-in" title="Zoom in">+</button>
+        <button type="button" id="wf-fit" title="Fit to width">Fit</button>
+    </div>
+
+    <!-- Mermaid reads the element's text content; th:text emits the definition
+         safely (the greater-than sign in an edge arrow is entity-escaped in HTML
+         but restored by textContent before Mermaid parses it). -->
+    <div class="workflow-diagram">
+        <pre class="mermaid" th:if="${mermaid != null}" th:text="${mermaid}">flowchart TD</pre>
+        <p class="muted" th:unless="${mermaid != null}">
+            The workflow could not be loaded — Jira credentials may be missing.</p>
+    </div>
+</main>
+
+<script src="/vendor/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'dark',
+        securityLevel: 'strict',
+        flowchart: {
+            // Render at natural size; CSS fits it to the container width by default,
+            // and the zoom control below scales from there. Generous spacing keeps
+            // edges from overlapping.
+            useMaxWidth: false,
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 60,
+            rankSpacing: 90,
+            padding: 16
+        }
+    });
+
+    // Zoom: 1.0 = fit-to-width (the default). +/- steps the SVG width; the panel
+    // scrolls horizontally once you go past the fit width, and the page scrolls
+    // vertically as the diagram grows taller.
+    (function () {
+        var MIN = 0.25, MAX = 4, STEP = 0.25, zoom = 1;
+        function svg() { return document.querySelector('.workflow-diagram .mermaid svg'); }
+        function apply() {
+            var s = svg();
+            if (s) s.style.width = (zoom * 100) + '%';
+            var lvl = document.getElementById('wf-level');
+            if (lvl) lvl.textContent = Math.round(zoom * 100) + '%';
+        }
+        function set(z) { zoom = Math.min(MAX, Math.max(MIN, z)); apply(); }
+        var inB = document.getElementById('wf-in'),
+            outB = document.getElementById('wf-out'),
+            fitB = document.getElementById('wf-fit');
+        if (inB)  inB.addEventListener('click',  function () { set(zoom + STEP); });
+        if (outB) outB.addEventListener('click', function () { set(zoom - STEP); });
+        if (fitB) fitB.addEventListener('click', function () { set(1); });
+    })();
+</script>
+</body>
+</html>

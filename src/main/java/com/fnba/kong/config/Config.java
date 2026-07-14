@@ -61,6 +61,12 @@ public final class Config {
     public String claudeBin()   { return require("claude.bin",   "CLAUDE_BIN",   "/workspace/.local/bin/claude"); }
     public int    port()        { return Integer.parseInt(require("server.port", "PORT", "7070")); }
 
+    /** Entity id of the workflow drawn on the Maintenance → Workflow Diagram screen. */
+    public String jiraWorkflowId() {
+        return require("jira.workflowId", "JIRA_WORKFLOW_ID",
+                "0a0385d5-45f4-410b-86ad-0218f4829c46");   // 2026-05 Encompass Minor Project Workflow
+    }
+
     /** Board definitions for the UI nav, parsed from the {@code jira.boards} setting. */
     public List<BoardDef> boards() {
         String raw = require("jira.boards", "JIRA_BOARDS",

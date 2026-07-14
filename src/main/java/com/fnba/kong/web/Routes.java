@@ -13,6 +13,7 @@ import com.fnba.kong.jira.Resolution;
 import com.fnba.kong.jira.Timing;
 import com.fnba.kong.jira.Transition;
 import com.fnba.kong.jira.TransitionLog;
+import com.fnba.kong.jira.Workflow;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
@@ -72,6 +73,7 @@ public class Routes {
         app.get("/settings", this::showSettings);
         app.post("/settings/wip", this::saveWipLimits);
         app.get("/maintenance/transitions", this::showTransitions);
+        app.get("/maintenance/workflow", this::showWorkflow);
         app.get("/history", this::history);
         app.get("/users/suggest", this::suggestUsers);
         app.get("/issue/{key}", this::issue);
@@ -461,6 +463,25 @@ public class Routes {
                 ? "ORDER BY updated DESC" : boards.get(0).jql();
         model.put("logs", jiraReady() ? jira.recentTransitions(jql, 50) : List.<TransitionLog>of());
         ctx.render("recent_transitions.html", model);
+    }
+
+    /** Maintenance → Workflow Diagram: the MIN workflow drawn as a Mermaid flowchart. */
+    private void showWorkflow(Context ctx) {
+        List<BoardDef> boards = cfg.boards();
+        String slug = boards.isEmpty() ? "" : boards.get(0).slug();
+        Map<String, Object> model = baseModel(slug);
+        model.put("title", "Workflow Diagram");
+        if (!slug.isEmpty()) {
+            model.put("showKanbanNav", true);
+            model.put("showListNav", true);
+        }
+        model.put("workflowId", cfg.jiraWorkflowId());
+        if (jiraReady()) {
+            Workflow wf = jira.workflow(cfg.jiraWorkflowId());
+            model.put("workflowName", wf.name());
+            model.put("mermaid", wf.toMermaid());
+        }
+        ctx.render("workflow.html", model);
     }
 
     /** The revision-history screen: the app version + the changelog rendered to HTML. */

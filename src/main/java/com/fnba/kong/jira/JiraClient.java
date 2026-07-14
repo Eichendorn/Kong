@@ -449,6 +449,56 @@ public class JiraClient {
         return List.of();
     }
 
+    /**
+     * Fetch a workflow definition (statuses + transitions) by its entity id,
+     * via the bulk-read API. Cached like other slow-changing metadata.
+     */
+    public Workflow workflow(String workflowId) {
+        return cached("meta:workflow:" + workflowId, META_TTL_MS, () -> doWorkflow(workflowId));
+    }
+
+    private Workflow doWorkflow(String workflowId) {
+        ObjectNode body = mapper.createObjectNode();
+        body.putArray("workflowIds").add(workflowId);
+        JsonNode root = post(baseUrl + "/rest/api/3/workflows", body);
+
+        // Status refs are resolved against the response's shared status list.
+        Map<String, Workflow.Status> byRef = new HashMap<>();
+        for (JsonNode s : root.path("statuses")) {
+            String ref = s.path("statusReference").asText();
+            byRef.put(ref, new Workflow.Status(ref, s.path("name").asText(),
+                    categoryKey(s.path("statusCategory").asText())));
+        }
+
+        JsonNode wf = root.path("workflows").path(0);
+        List<Workflow.Status> statuses = new ArrayList<>();
+        for (JsonNode s : wf.path("statuses")) {
+            Workflow.Status st = byRef.get(s.path("statusReference").asText());
+            if (st != null) statuses.add(st);
+        }
+        List<Workflow.Transition> transitions = new ArrayList<>();
+        for (JsonNode t : wf.path("transitions")) {
+            List<String> from = new ArrayList<>();
+            for (JsonNode l : t.path("links")) {
+                String fref = l.path("fromStatusReference").asText("");
+                if (!fref.isBlank()) from.add(fref);
+            }
+            transitions.add(new Workflow.Transition(
+                    t.path("name").asText(), t.path("type").asText(),
+                    from, t.path("toStatusReference").asText()));
+        }
+        return new Workflow(workflowId, wf.path("name").asText(), statuses, transitions);
+    }
+
+    /** Map the workflow API's status-category name to Jira's category key. */
+    private static String categoryKey(String apiCategory) {
+        return switch (apiCategory) {
+            case "IN_PROGRESS" -> "indeterminate";
+            case "DONE" -> "done";
+            default -> "new";   // TODO and anything unexpected
+        };
+    }
+
     // ---- Writes ------------------------------------------------------------
 
     /**

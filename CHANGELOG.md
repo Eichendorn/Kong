@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.14] — 2026-07-14
+
+### Added
+- **Workflow Diagram** (Maintenance → Workflow Diagram). Renders the MIN
+  workflow as a flowchart, fetched live from Jira: statuses coloured by category
+  (To Do / In Progress / Done), the create step off a Start node, and the four
+  global transitions (Cancel Task, CLOSE, Send to Backlog, TRACK) off a dashed
+  "Any status" node. Diagrams are drawn with Mermaid, vendored locally so no
+  external network calls are made. The target workflow is configurable via
+  `jira.workflowId` / `JIRA_WORKFLOW_ID`.
+- **Zoom control** on the Workflow Diagram — `−` / `+` steps and a "Fit" reset,
+  with a live percentage readout. The diagram fits the full window width by
+  default and scrolls vertically as it grows.
+
+### Fixed
+- **Detail field columns use the full pane width.** The top-right transition
+  dropdown had reserved 300px down the entire detail head, squeezing every field
+  row below it; that reservation now applies only to the title lines, so the
+  two-column layout (and long rows like Labels + its Edit-in-Jira link) get the
+  space that was previously wasted.
+
 ## [1.1.13] — 2026-07-14
 
 ### Added
