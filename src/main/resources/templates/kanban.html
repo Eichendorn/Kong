@@ -40,7 +40,10 @@
             </header>
             <div class="kanban-cards">
                 <div class="kanban-group" th:each="g, gs : ${c.groups()}">
-                    <div class="kanban-group-sep" th:if="${c.groups().size() > 1}">
+                    <!-- A column's own entry status gets no separator — its cards sit flush
+                         under the header like a single-status column. Other sub-statuses
+                         (e.g. Spec Review, Ready to Test) keep theirs. -->
+                    <div class="kanban-group-sep" th:if="${c.groups().size() > 1 and !{'Encompass On Deck','Implement'}.contains(g.status())}">
                         <span class="kanban-group-label" th:text="${g.status()}">Status</span>
                     </div>
                     <ul class="kanban-group-list">
@@ -57,7 +60,7 @@
                                         <button th:replace="~{fragments/icons :: openJira(${jiraBaseUrl} + '/browse/' + ${i.key()})}"></button>
                                     </span>
                                     <span class="kanban-card-top-right">
-                                        <span class="status kanban-status" th:if="${i.status() != c.status()}"
+                                        <span class="status kanban-status" th:if="${i.status() != c.status() and i.status() != 'Encompass On Deck'}"
                                               th:classappend="'sc-' + ${i.statusCategory()} + (${i.status() == 'Ready to Release'} ? ' status-rtr' : '')"
                                               th:text="${i.status()}">Status</span>
                                         <span th:if="${i.checklistsComplete()}" class="badge badge-yes"
@@ -94,7 +97,8 @@
                                     <span class="kanban-reason-text" th:text="${i.reasonForTrackingDisplay()}">Reason</span>
                                 </div>
                                 <div class="kanban-card-foot">
-                                    <span class="kanban-type" th:text="${i.issueType()}">Type</span>
+                                    <span class="kanban-type" th:text="${i.issueType()}"
+                                          th:classappend="${i.issueType() == 'Encompass Bug'} ? 'type-bug' : (${i.issueType() == 'Refactor'} ? 'type-refactor' : (${i.issueType() == 'Encompass Investigation'} ? 'type-investigation' : ''))">Type</span>
                                     <span class="kanban-assignee" th:text="${i.assignee()}"
                                           th:classappend="${i.assignee() == 'Unassigned'} ? 'unassigned' : ''">Assignee</span>
                                     <span class="kanban-days" title="Days — in status / in column / on board"
@@ -210,6 +214,59 @@
     (function () {
         var card = document.querySelector('.kanban-card.highlighted');
         if (card) card.scrollIntoView({ block: 'center', inline: 'center' });
+    })();
+
+    // Click-and-hold a card to toggle a subtle yellow flag (.marked). Marks
+    // persist in localStorage keyed by issue key, so they survive the board's
+    // own post-edit reload. Background-only; independent of selection.
+    (function () {
+        var STORE = 'kong.kanban.marked', HOLD_MS = 450, MOVE_TOL = 8;
+        var board = document.querySelector('.kanban');
+        if (!board) return;
+
+        function load() {
+            try { return new Set(JSON.parse(localStorage.getItem(STORE) || '[]')); }
+            catch (e) { return new Set(); }
+        }
+        function save(set) {
+            try { localStorage.setItem(STORE, JSON.stringify(Array.from(set))); } catch (e) {}
+        }
+        var marked = load();
+        function keyOf(card) {
+            var a = card.querySelector('a[data-key]');
+            return a && a.getAttribute('data-key');
+        }
+        // Re-apply persisted marks (the server render doesn't know about them).
+        board.querySelectorAll('.kanban-card').forEach(function (card) {
+            var k = keyOf(card);
+            if (k && marked.has(k)) card.classList.add('marked');
+        });
+        function toggle(card) {
+            var k = keyOf(card);
+            if (!k) return;
+            if (card.classList.toggle('marked')) marked.add(k); else marked.delete(k);
+            save(marked);
+        }
+
+        var timer = null, sx = 0, sy = 0, held = false;
+        function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+        board.addEventListener('mousedown', function (e) {
+            if (e.button !== 0 || e.target.closest('button')) return;
+            var card = e.target.closest('.kanban-card');
+            if (!card) return;
+            sx = e.clientX; sy = e.clientY; held = false;
+            timer = setTimeout(function () { timer = null; held = true; toggle(card); }, HOLD_MS);
+        });
+        board.addEventListener('mousemove', function (e) {
+            if (timer && (Math.abs(e.clientX - sx) > MOVE_TOL || Math.abs(e.clientY - sy) > MOVE_TOL)) cancel();
+        });
+        board.addEventListener('mouseup', cancel);
+        board.addEventListener('mouseleave', cancel);
+        // Swallow the click that trails a completed long-press so it doesn't
+        // also fire selectCard. Capture phase, so it beats the anchor's onclick.
+        board.addEventListener('click', function (e) {
+            if (held) { held = false; e.preventDefault(); e.stopPropagation(); }
+        }, true);
     })();
 </script>
 </body>

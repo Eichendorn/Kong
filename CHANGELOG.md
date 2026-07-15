@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.15] — 2026-07-15
+
+### Added
+- **Flag a Kanban card by click-and-hold.** Pressing and holding a card (~450ms)
+  toggles a subtle yellow wash on it, so you can mark cards while you work; hold
+  again to clear. Marks are background-only, so they layer under the existing
+  selection (orange outline) and post-edit spotlight (blue border). They persist
+  per browser (localStorage, keyed by issue key), so they survive the board's own
+  reload after you edit a card. Dragging or pressing on a card's link buttons
+  doesn't trigger it, and a completed hold won't also select the card.
+- **Colour-coded issue types on Kanban cards.** In the card foot, **Encompass
+  Bug** is red, **Refactor** is blue, and **Encompass Investigation** is brown;
+  other types stay the default muted grey.
+
+### Changed
+- **Cleaner multi-status columns.** A column no longer repeats its own entry
+  status. In **On Deck**, the *Encompass On Deck* cards drop their redundant
+  status badge and yellow separator and sit flush under the header; in
+  **Implement**, the *Implement* separator is likewise gone. Genuinely distinct
+  sub-statuses (Spec Review, Ready to Test, …) keep their separators, so the
+  columns read consistently with the single-status ones.
+
 ## [1.1.14] — 2026-07-14
 
 ### Added

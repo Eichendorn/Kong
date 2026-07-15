@@ -219,6 +219,12 @@ h1 { font-size: 20px; margin: 0 0 4px; color: var(--orange); }
 .kanban-card a:hover { background: #232529; border-radius: 8px; }
 .kanban-card.highlighted { border-color: var(--accent); }
 .kanban-card.selected { border-color: #f5a623; }
+/* Click-and-hold toggles a subtle yellow wash to flag a card while you work.
+   Background-only, so it layers under the .selected / .highlighted borders;
+   the marked-hover keeps the yellow (a touch lighter) instead of the neutral
+   card hover. Persisted per browser in localStorage. */
+.kanban-card.marked { background: #3c3720; }
+.kanban-card.marked a:hover { background: #484026; }
 
 /* Issue detail modal (Kanban) */
 .modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, .55);
@@ -267,6 +273,10 @@ h1 { font-size: 20px; margin: 0 0 4px; color: var(--orange); }
 .kanban-status { font-size: 10px; padding: 1px 7px; white-space: nowrap;
     overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .kanban-type { color: var(--muted); white-space: nowrap; }
+/* Colour-code notable issue types in the card foot. */
+.kanban-type.type-bug { color: #ed4245; }            /* Encompass Bug — red */
+.kanban-type.type-refactor { color: #4f8cff; }       /* Refactor — blue */
+.kanban-type.type-investigation { color: #c08552; }  /* Encompass Investigation — brown */
 .kanban-card-summary { font-size: 13px; line-height: 1.35; }
 .kanban-tester { font-size: 12px; margin-top: 6px; color: var(--text); }
 .kanban-tester-label { color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
