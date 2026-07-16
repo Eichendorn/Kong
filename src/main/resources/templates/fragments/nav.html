@@ -19,7 +19,7 @@
     <a th:if="${showListNav}" class="view-toggle nav-list"
        th:href="@{'/board/' + ${activeSlug}}">WIP List</a>
     <a th:if="${showSpecifyDoneNav}" class="view-toggle nav-specify-done"
-       th:href="@{'/specify-done/' + ${activeSlug}}">Specify Done</a>
+       th:href="@{'/specify-done/' + ${specifyDoneSlug}}">Specify Done</a>
     <select th:if="${showPersonFilter}" class="person-select" aria-label="Filter by person"
             th:classappend="${selectedPerson != null and !selectedPerson.isEmpty()} ? 'filtered' : ''"
             onchange="window.location.href = this.value;">

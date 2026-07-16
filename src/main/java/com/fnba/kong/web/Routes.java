@@ -140,6 +140,8 @@ public class Routes {
         // From Specify Done you can jump to either of the other two views.
         model.put("showKanbanNav", true);
         model.put("showListNav", true);
+        // This is the one screen the Specify Done button is hidden on.
+        model.put("showSpecifyDoneNav", false);
         ctx.render("specify_done.html", model);
     }
 
@@ -280,7 +282,6 @@ public class Routes {
         model.put("title", "Work In Progress - Kanban");
         model.put("boardSlug", slug);
         model.put("showListNav", true);   // WIP List toggle lives in the top bar on the Kanban page
-        model.put("showSpecifyDoneNav", true);
         model.put("highlight", ctx.queryParam("highlight"));   // card to spotlight, if any
 
         // Reuses the (cached) board search. Active items only, folded into the
@@ -621,11 +622,12 @@ public class Routes {
         model.put("issues", sortByStatus(res.issues()));
         model.put("truncated", res.truncated());
         model.put("resultCap", MAX_RESULTS);
-        // The KANBAN / Specify Done toggles belong in the top bar only on a real
-        // board list (not /search), where there's a slug to target.
+        // The KANBAN toggle belongs in the top bar only on a real board list
+        // (not /search), where there's a slug to target. The Specify Done button
+        // follows the app-wide convention set in baseModel (shown everywhere but
+        // the Specify Done screen).
         boolean hasSlug = activeSlug != null && !activeSlug.isBlank();
         model.put("showKanbanNav", hasSlug);
-        model.put("showSpecifyDoneNav", hasSlug);
         ctx.render("board.html", model);
     }
 
@@ -970,8 +972,18 @@ public class Routes {
 
     private Map<String, Object> baseModel(String activeSlug) {
         Map<String, Object> model = new HashMap<>();
-        model.put("boards", cfg.boards());
+        List<BoardDef> boards = cfg.boards();
+        model.put("boards", boards);
         model.put("activeSlug", activeSlug == null ? "" : activeSlug);
+        // Convention: the Specify Done button lives in the top bar on every
+        // screen except the Specify Done screen itself (which overrides this to
+        // false). It needs a board to target, so on slug-less screens (search,
+        // settings, history, maintenance) it falls back to the first board.
+        String specifyDoneSlug = (activeSlug != null && !activeSlug.isBlank())
+                ? activeSlug
+                : (boards.isEmpty() ? "" : boards.get(0).slug());
+        model.put("specifyDoneSlug", specifyDoneSlug);
+        model.put("showSpecifyDoneNav", !specifyDoneSlug.isEmpty());
         model.put("jiraReady", jiraReady());
         model.put("jiraBaseUrl", jiraBrowseBase());
         model.put("version", Config.appVersion());
