@@ -1,6 +1,5 @@
 package com.fnba.kong.web;
 
-import com.fnba.kong.claude.ClaudeService;
 import com.fnba.kong.config.BoardDef;
 import com.fnba.kong.config.Config;
 import com.fnba.kong.config.Settings;
@@ -46,13 +45,11 @@ public class Routes {
 
     private final Config cfg;
     private final JiraClient jira;
-    private final ClaudeService claude;
     private final Settings settings;
 
-    public Routes(Config cfg, JiraClient jira, ClaudeService claude, Settings settings) {
+    public Routes(Config cfg, JiraClient jira, Settings settings) {
         this.cfg = cfg;
         this.jira = jira;
-        this.claude = claude;
         this.settings = settings;
     }
 
@@ -101,8 +98,6 @@ public class Routes {
         app.post("/issue/{key}/storypoints", this::doStoryPoints);
         app.post("/issue/{key}/comment", this::doComment);
         app.post("/issue/{key}/worklog", this::doWorklog);
-        app.post("/issue/{key}/claude", this::doClaude);
-        app.get("/issue/{key}/claude/runs", this::claudeRuns);
 
         app.exception(JiraClient.JiraException.class, (e, ctx) ->
                 ctx.status(502).html("<div class='error'>Jira error: "
@@ -662,9 +657,7 @@ public class Routes {
         model.put("transitions", join(transF));
         model.put("comments", comments);
         model.put("commentJiraUrl", commentJiraUrl(key, comments));
-        model.put("runs", claude.forIssue(key));
         model.put("sidebarIssues", join(sidebarF));
-        model.put("allowedSkills", claude.allowedSkills());
         ctx.render("issue.html", model);
     }
 
@@ -732,7 +725,6 @@ public class Routes {
         }
 
         jira.transition(key, transitionId, resolution);
-        claude.onTransition(key, toStatus);
         renderDetailFragment(ctx, key);
     }
 
@@ -917,17 +909,6 @@ public class Routes {
         renderDetailFragment(ctx, key);
     }
 
-    private void doClaude(Context ctx) {
-        String key = ctx.pathParam("key");
-        String command = ctx.formParam("command");
-        if (command != null && !command.isBlank()) claude.runSkill(key, command);
-        renderRunsFragment(ctx, key);
-    }
-
-    private void claudeRuns(Context ctx) {
-        renderRunsFragment(ctx, ctx.pathParam("key"));
-    }
-
     // ---- Helpers -----------------------------------------------------------
 
     /** GET the detail fragment on its own (used to dismiss the resolution prompt). */
@@ -985,13 +966,6 @@ public class Routes {
             if (e.getCause() instanceof RuntimeException re) throw re;
             throw e;
         }
-    }
-
-    private void renderRunsFragment(Context ctx, String key) {
-        Map<String, Object> model = new HashMap<>();
-        model.put("issue", jira.getIssue(key));
-        model.put("runs", claude.forIssue(key));
-        ctx.render("fragments/claude_runs.html", model);
     }
 
     private Map<String, Object> baseModel(String activeSlug) {

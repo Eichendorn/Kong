@@ -2,7 +2,7 @@
 # config.local.properties is gitignored so the token never gets committed.
 #
 # You can also supply any of these via environment variables instead
-# (JIRA_BASE_URL, JIRA_EMAIL, JIRA_TOKEN, JIRA_BOARDS, CLAUDE_BIN, PORT).
+# (JIRA_BASE_URL, JIRA_EMAIL, JIRA_TOKEN, JIRA_BOARDS, PORT).
 # Environment variables win over this file.
 
 jira.baseUrl=https://fnba.atlassian.net
@@ -12,9 +12,6 @@ jira.token=PASTE_YOUR_API_TOKEN_HERE
 # Comma-separated board definitions shown in the UI: label|jql
 # (one entry per pipe-delimited pair, entries separated by ;;)
 jira.boards=MIN - Encompass Work|project = MIN ORDER BY updated DESC
-
-# Path to the claude CLI used for the Claude integration.
-claude.bin=/workspace/.local/bin/claude
 
 # HTTP port for the local web app.
 server.port=7070

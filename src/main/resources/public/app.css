@@ -519,15 +519,3 @@ dl.meta .edit-btn { margin-left: 8px; white-space: nowrap; }
 .comment-date { color: var(--muted); }
 .comment-body { white-space: pre-wrap; }
 .comment-replies { list-style: none; margin: 10px 0 0; padding: 0 0 0 16px; border-left: 2px solid var(--accent); display: flex; flex-direction: column; gap: 10px; }
-
-/* Claude panel */
-.claude-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-top: 18px; }
-.claude-panel h3 { margin: 0 0 10px; }
-.claude-panel form { display: flex; gap: 8px; }
-.claude-cmd { flex: 1; }
-.run { background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--muted); border-radius: 6px; padding: 8px 12px; margin-top: 10px; }
-.run-running { border-left-color: var(--amber); }
-.run-success { border-left-color: var(--green); }
-.run-failed { border-left-color: var(--red); }
-.run-head { display: flex; justify-content: space-between; align-items: center; }
-.run-output { white-space: pre-wrap; max-height: 320px; overflow: auto; font-size: 12px; margin: 8px 0 0; }

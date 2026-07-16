@@ -1,6 +1,5 @@
 package com.fnba.kong;
 
-import com.fnba.kong.claude.ClaudeService;
 import com.fnba.kong.config.Config;
 import com.fnba.kong.config.Settings;
 import com.fnba.kong.jira.JiraClient;
@@ -14,16 +13,14 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 /**
  * Entry point. Wires config -> services -> routes and starts the embedded
- * Jetty server. All Jira and Claude work happens server-side; the browser only
+ * Jetty server. All Jira work happens server-side; the browser only
  * ever sees rendered HTML (plus the vendored htmx.min.js).
  */
 public class App {
 
     public static void main(String[] args) {
         Config cfg = Config.load();
-        long boot = System.currentTimeMillis();
 
-        ClaudeService claude = new ClaudeService(cfg, boot);
         // JiraClient is only constructed when credentials exist, so the app can
         // still boot (and show a helpful banner) before the token is set.
         JiraClient jira = cfg.hasJiraCredentials() ? new JiraClient(cfg) : null;
@@ -39,7 +36,7 @@ public class App {
             c.showJavalinBanner = false;
         });
 
-        new Routes(cfg, jira, claude, settings).register(app);
+        new Routes(cfg, jira, settings).register(app);
 
         app.start(cfg.port());
         System.out.println("Kong running at http://localhost:" + cfg.port());

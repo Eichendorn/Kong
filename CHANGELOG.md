@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.16] — 2026-07-16
+
+### Removed
+- **Claude integration.** The *Claude* panel on the issue detail screen is gone,
+  along with its whole back end: the skill-runner service that shelled out to the
+  `claude` CLI, the run-history polling fragment, the `POST /issue/{key}/claude`
+  and `GET /issue/{key}/claude/runs` routes, and the `claude.bin` config setting.
+  This also removes the transition hook that auto-ran
+  `/developer-checklists-setup` when an issue moved to *In Progress* — that
+  automation no longer fires from Kong.
+
 ## [1.1.15] — 2026-07-15
 
 ### Added

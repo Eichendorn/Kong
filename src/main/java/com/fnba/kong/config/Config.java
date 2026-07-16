@@ -58,7 +58,6 @@ public final class Config {
     public String jiraBaseUrl() { return require("jira.baseUrl", "JIRA_BASE_URL", "https://fnba.atlassian.net"); }
     public String jiraEmail()   { return require("jira.email",   "JIRA_EMAIL",   null); }
     public String jiraToken()   { return require("jira.token",   "JIRA_TOKEN",   null); }
-    public String claudeBin()   { return require("claude.bin",   "CLAUDE_BIN",   "/workspace/.local/bin/claude"); }
     public int    port()        { return Integer.parseInt(require("server.port", "PORT", "7070")); }
 
     /** Entity id of the workflow drawn on the Maintenance → Workflow Diagram screen. */
