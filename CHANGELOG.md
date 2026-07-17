@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.21] — 2026-07-17
+
+### Changed
+- **Top-bar view-toggle buttons now follow one pattern: shown on every screen
+  except the one they link to.** The **Kanban** button now appears everywhere but
+  the Kanban screen; **WIP List** and **Specify Done** follow the same rule. As a
+  result WIP List also shows on the issue, Settings, History, Maintenance,
+  Create, and Search screens (previously only on Kanban and Specify Done). On
+  screens without a board context, all three target the first configured board.
+- **Removed the redundant Kanban link** from the top of the issue-detail
+  sidebar — the top-bar Kanban button now covers it.
+
 ## [1.1.20] — 2026-07-17
 
 ### Fixed

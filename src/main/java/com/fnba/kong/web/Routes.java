@@ -139,10 +139,7 @@ public class Routes {
         model.put("issues", sortByStatus(res.issues()));
         model.put("truncated", res.truncated());
         model.put("resultCap", MAX_RESULTS);
-        // From Specify Done you can jump to either of the other two views.
-        model.put("showKanbanNav", true);
-        model.put("showListNav", true);
-        // This is the one screen the Specify Done button is hidden on.
+        // Kanban and WIP List default to shown (baseModel); hide only this screen's own button.
         model.put("showSpecifyDoneNav", false);
         ctx.render("specify_done.html", model);
     }
@@ -283,7 +280,7 @@ public class Routes {
         Map<String, Object> model = baseModel(slug);
         model.put("title", "Work In Progress - Kanban");
         model.put("boardSlug", slug);
-        model.put("showListNav", true);   // WIP List toggle lives in the top bar on the Kanban page
+        model.put("showKanbanNav", false);   // this IS the Kanban screen
         model.put("highlight", ctx.queryParam("highlight"));   // card to spotlight, if any
 
         // Reuses the (cached) board search. Active items only, folded into the
@@ -453,10 +450,6 @@ public class Routes {
         String slug = boards.isEmpty() ? "" : boards.get(0).slug();
         Map<String, Object> model = baseModel(slug);
         model.put("title", "Recent Transitions");
-        if (!slug.isEmpty()) {   // wire the Kanban / WIP List toggles to the default board
-            model.put("showKanbanNav", true);
-            model.put("showListNav", true);
-        }
         String jql = boards.isEmpty()
                 ? "ORDER BY updated DESC" : boards.get(0).jql();
         model.put("logs", jiraReady() ? jira.recentTransitions(jql, 50) : List.<TransitionLog>of());
@@ -469,10 +462,6 @@ public class Routes {
         String slug = boards.isEmpty() ? "" : boards.get(0).slug();
         Map<String, Object> model = baseModel(slug);
         model.put("title", "Workflow Diagram");
-        if (!slug.isEmpty()) {
-            model.put("showKanbanNav", true);
-            model.put("showListNav", true);
-        }
         model.put("workflowId", cfg.jiraWorkflowId());
         if (jiraReady()) {
             Workflow wf = jira.workflow(cfg.jiraWorkflowId());
@@ -624,12 +613,12 @@ public class Routes {
         model.put("issues", sortByStatus(res.issues()));
         model.put("truncated", res.truncated());
         model.put("resultCap", MAX_RESULTS);
-        // The KANBAN toggle belongs in the top bar only on a real board list
-        // (not /search), where there's a slug to target. The Specify Done button
-        // follows the app-wide convention set in baseModel (shown everywhere but
-        // the Specify Done screen).
-        boolean hasSlug = activeSlug != null && !activeSlug.isBlank();
-        model.put("showKanbanNav", hasSlug);
+        // This renders both the board's WIP List (with a slug) and /search (no
+        // slug). On the WIP List screen, hide its own WIP List button; Kanban and
+        // Specify Done default to shown (baseModel). /search isn't any of the
+        // three board views, so all three buttons stay shown there.
+        boolean isBoardList = activeSlug != null && !activeSlug.isBlank();
+        if (isBoardList) model.put("showListNav", false);
         ctx.render("board.html", model);
     }
 
@@ -1015,15 +1004,19 @@ public class Routes {
         List<BoardDef> boards = cfg.boards();
         model.put("boards", boards);
         model.put("activeSlug", activeSlug == null ? "" : activeSlug);
-        // Convention: the Specify Done button lives in the top bar on every
-        // screen except the Specify Done screen itself (which overrides this to
-        // false). It needs a board to target, so on slug-less screens (search,
-        // settings, history, maintenance) it falls back to the first board.
-        String specifyDoneSlug = (activeSlug != null && !activeSlug.isBlank())
+        // Default pattern for the top-bar view-toggle buttons (Kanban, WIP List,
+        // Specify Done): each one shows on every screen EXCEPT its own — the
+        // screen it links to overrides its flag to false. Every button targets a
+        // board, so on slug-less screens (search, settings, history, maintenance)
+        // the link falls back to the first configured board via navSlug.
+        String navSlug = (activeSlug != null && !activeSlug.isBlank())
                 ? activeSlug
                 : (boards.isEmpty() ? "" : boards.get(0).slug());
-        model.put("specifyDoneSlug", specifyDoneSlug);
-        model.put("showSpecifyDoneNav", !specifyDoneSlug.isEmpty());
+        boolean haveBoard = !navSlug.isEmpty();
+        model.put("navSlug", navSlug);
+        model.put("showKanbanNav", haveBoard);
+        model.put("showListNav", haveBoard);
+        model.put("showSpecifyDoneNav", haveBoard);
         model.put("jiraReady", jiraReady());
         model.put("jiraBaseUrl", jiraBrowseBase());
         model.put("version", Config.appVersion());

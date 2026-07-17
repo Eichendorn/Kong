@@ -15,7 +15,6 @@
     <aside class="issue-sidebar">
         <nav class="sidebar-nav">
             <a th:href="@{'/board/' + ${activeSlug}}">← List</a>
-            <a th:href="@{'/kanban/' + ${activeSlug}(highlight=${issue.key()})}">⊞ Kanban</a>
         </nav>
         <ul class="mini-list">
             <li th:each="i : ${sidebarIssues}"
