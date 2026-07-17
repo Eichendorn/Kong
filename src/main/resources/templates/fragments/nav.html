@@ -30,6 +30,10 @@
                 th:text="${p}"
                 th:selected="${p == selectedPerson}">Name</option>
     </select>
+    <form class="key-search" method="get" th:action="@{/goto}" role="search">
+        <input type="text" name="key" placeholder="Go to task key…"
+               aria-label="Go to a Jira task by key" autocomplete="off" spellcheck="false"/>
+    </form>
     <details class="nav-menu">
         <summary>Maintenance ▾</summary>
         <div class="nav-menu-items">

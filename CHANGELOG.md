@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.19] — 2026-07-17
+
+### Added
+- **Go-to-task search in the top bar.** A key box in the top bar (on every
+  screen) jumps straight to a task's detail screen. The key is normalised
+  (trimmed, upper-cased, spaces stripped), so `min-679` works. An unknown or
+  invalid key lands on a clean full-screen **Task Not Found** response (HTTP 404)
+  showing the key you searched, instead of a raw Jira error.
+
 ## [1.1.18] — 2026-07-17
 
 ### Added

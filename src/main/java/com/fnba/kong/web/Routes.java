@@ -65,6 +65,7 @@ public class Routes {
         app.get("/attachment/{id}", this::attachment);
         app.get("/me/avatar", this::currentAvatar);
         app.get("/search", this::search);
+        app.get("/goto", this::gotoIssue);
         app.get("/create", this::showCreate);
         app.post("/create", this::doCreate);
         app.get("/settings", this::showSettings);
@@ -643,25 +644,53 @@ public class Routes {
                 .toList();
     }
 
+    /**
+     * Top-bar "go to task key" box: normalise the typed key and jump to its
+     * detail screen. A blank entry just returns home; a bad key lands on the
+     * Task Not Found screen via {@link #issue}.
+     */
+    private void gotoIssue(Context ctx) {
+        String raw = ctx.queryParam("key");
+        String key = raw == null ? "" : raw.trim().toUpperCase().replaceAll("\\s+", "");
+        ctx.redirect(key.isEmpty() ? "/" : "/issue/" + key);
+    }
+
     private void issue(Context ctx) {
         String key = ctx.pathParam("key");
+        // Fetch the issue first so an unknown/invalid key becomes a friendly
+        // Task Not Found screen rather than a raw Jira 4xx error page.
+        Issue issue;
+        try {
+            issue = jira.getIssue(key);
+        } catch (JiraClient.JiraException e) {
+            if (e.statusCode == 404 || e.statusCode == 400) { renderNotFound(ctx, key); return; }
+            throw e;
+        }
         BoardDef board = resolveBoard(ctx, key);
         Map<String, Object> model = baseModel(board == null ? "" : board.slug());
         model.put("title", key);
-        // Fire the independent Jira reads concurrently, then join.
-        var issueF = async(() -> jira.getIssue(key));
+        // Fire the remaining independent Jira reads concurrently, then join.
         var transF = async(() -> jira.transitions(key));
         var commsF = async(() -> jira.comments(key));
         var sidebarF = async(() -> (board != null && jiraReady())
                 ? sortByStatus(jira.searchBrief(board.jql(), MAX_RESULTS))
                 : List.<Issue>of());
         List<Comment> comments = join(commsF);
-        model.put("issue", join(issueF));
+        model.put("issue", issue);
         model.put("transitions", join(transF));
         model.put("comments", comments);
         model.put("commentJiraUrl", commentJiraUrl(key, comments));
         model.put("sidebarIssues", join(sidebarF));
         ctx.render("issue.html", model);
+    }
+
+    /** Full-screen "Task Not Found" response for an unknown/invalid issue key. */
+    private void renderNotFound(Context ctx, String key) {
+        Map<String, Object> model = baseModel("");
+        model.put("title", "Task Not Found");
+        model.put("missingKey", key);
+        ctx.status(404);
+        ctx.render("not_found.html", model);
     }
 
     /**

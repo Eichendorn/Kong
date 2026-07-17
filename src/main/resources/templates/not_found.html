@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Kong — Task Not Found</title>
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"/>
+    <link rel="stylesheet" href="/app.css"/>
+    <script src="/htmx.min.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content not-found-main">
+    <a class="back-link" href="/">&larr; Back</a>
+    <div class="not-found-box">
+        <h1 class="not-found-title">Task Not Found</h1>
+        <p class="not-found-msg">
+            No Jira task matches
+            <code th:text="${missingKey}">KEY-1</code>.
+            Check the key and try again.
+        </p>
+    </div>
+</main>
+</body>
+</html>
