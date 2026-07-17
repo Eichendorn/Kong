@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.20] — 2026-07-17
+
+### Fixed
+- **Thin dark line under the brand mark.** The top bar's 1px `border-bottom` ran
+  directly beneath the app icon, reading as a black underline on it. The brand
+  mark now extends 1px lower to cover the border under itself; the bar's divider
+  is unchanged everywhere else and the bar height stays the same.
+
 ## [1.1.19] — 2026-07-17
 
 ### Added

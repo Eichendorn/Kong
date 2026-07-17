@@ -6,7 +6,7 @@
 
     <groupId>com.fnba</groupId>
     <artifactId>kong</artifactId>
-    <version>1.1.19</version>
+    <version>1.1.20</version>
     <packaging>jar</packaging>
 
     <properties>
