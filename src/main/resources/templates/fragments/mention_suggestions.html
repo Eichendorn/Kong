@@ -1,0 +1,9 @@
+<div xmlns:th="http://www.thymeleaf.org">
+    <ul class="suggest-list" th:if="${!users.isEmpty()}">
+        <li th:each="u : ${users}">
+            <button type="button" class="suggest-item mention-item"
+                    th:attr="data-account=${u.accountId()}, data-name=${u.displayName()}"
+                    th:text="${u.displayName()}">User</button>
+        </li>
+    </ul>
+</div>

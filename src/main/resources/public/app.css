@@ -321,6 +321,12 @@ h1 { font-size: 20px; margin: 0 0 4px; color: var(--orange); }
     border: none; color: var(--text); padding: 6px 9px; border-radius: 4px; cursor: pointer; }
 .suggest-item:hover { background: var(--accent); color: #fff; }
 
+/* @-mention autocomplete in the comment box */
+.mention-wrap { position: relative; flex: 1 1 100%; }
+.mention-dropdown { z-index: 40; }
+.mention-dropdown[hidden] { display: none; }
+.mention-item.active { background: var(--accent); color: #fff; }
+
 /* Specification Details: formatted/markdown toggle + preview */
 .field-head-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .spec-toggle { display: flex; }

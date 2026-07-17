@@ -166,7 +166,11 @@
         <form class="add-comment" method="post"
               th:attr="hx-post=@{'/issue/' + ${issue.key()} + '/comment'}"
               hx-target="#issue-detail" hx-swap="outerHTML">
-            <textarea name="text" rows="3" placeholder="Comment text…"></textarea>
+            <div class="mention-wrap">
+                <textarea name="text" rows="3" class="mention-input"
+                          placeholder="Comment text…  (type @ to mention someone)"></textarea>
+                <div class="mention-dropdown suggestions" hidden></div>
+            </div>
             <button type="submit">Comment</button>
         </form>
 

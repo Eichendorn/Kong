@@ -73,6 +73,7 @@ public class Routes {
         app.get("/maintenance/workflow", this::showWorkflow);
         app.get("/history", this::history);
         app.get("/users/suggest", this::suggestUsers);
+        app.get("/users/mention-suggest", this::mentionSuggest);
         app.get("/issue/{key}", this::issue);
         app.get("/issue/{key}/detail", this::detailFragment);
 
@@ -756,6 +757,16 @@ public class Routes {
     }
 
     /** Type-ahead user suggestions for inline assignee/reporter edits. */
+    /** Autocomplete for @-mentions in comments — any active user, instance-wide. */
+    private void mentionSuggest(Context ctx) {
+        String q = ctx.queryParam("q");
+        List<JiraUser> users = (jiraReady() && q != null && !q.isBlank())
+                ? jira.searchUsers(q, 8) : List.<JiraUser>of();
+        Map<String, Object> model = new HashMap<>();
+        model.put("users", users);
+        ctx.render("fragments/mention_suggestions.html", model);
+    }
+
     private void suggestIssueUsers(Context ctx) {
         String key = ctx.pathParam("key");
         String field = ctx.queryParam("field");

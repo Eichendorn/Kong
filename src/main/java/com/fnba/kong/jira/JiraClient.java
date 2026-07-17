@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Thin server-side wrapper around the Jira Cloud REST API (v3). All calls use
@@ -315,6 +317,27 @@ public class JiraClient {
         String url = baseUrl + "/rest/api/3/user/assignable/search"
                 + "?maxResults=" + max + "&project=" + enc(projectKey);
         if (query != null && !query.isBlank()) url += "&query=" + enc(query.trim());
+        JsonNode arr = get(url);
+        List<JiraUser> out = new ArrayList<>();
+        for (JsonNode u : arr) {
+            if (!u.path("active").asBoolean(true)) continue;
+            String id = u.path("accountId").asText("");
+            if (!id.isEmpty()) out.add(new JiraUser(id, u.path("displayName").asText("")));
+        }
+        out.sort(Comparator.comparing(JiraUser::displayName, String.CASE_INSENSITIVE_ORDER));
+        return out;
+    }
+
+    /**
+     * Any active user in the instance whose name/email matches {@code query} —
+     * backs the @-mention autocomplete in comments. Unlike {@link #assignableUsers},
+     * this isn't scoped to a project, so you can mention anyone (a manager, QA,
+     * etc.), matching how Jira's own editor behaves.
+     */
+    public List<JiraUser> searchUsers(String query, int max) {
+        if (query == null || query.isBlank()) return List.of();
+        String url = baseUrl + "/rest/api/3/user/search"
+                + "?maxResults=" + max + "&query=" + enc(query.trim());
         JsonNode arr = get(url);
         List<JiraUser> out = new ArrayList<>();
         for (JsonNode u : arr) {
@@ -877,7 +900,31 @@ public class JiraClient {
     }
 
     /** Append text nodes for one line, turning {@code **bold**} spans into strong marks. */
+    /**
+     * The token the comment box inserts when you pick someone from the @-mention
+     * autocomplete: {@code @[Display Name](accountId)}. Turned into a proper ADF
+     * mention node here, which is what makes Jira send the "you were mentioned"
+     * notification (Jira does the emailing — Kong just supplies the right ADF).
+     */
+    private static final Pattern MENTION_TOKEN =
+            Pattern.compile("@\\[([^\\]]+)\\]\\(([^)]+)\\)");
+
+    /** Split a line into mention nodes and plain runs, then bold-format the runs. */
     private void appendInline(ArrayNode target, String text) {
+        Matcher m = MENTION_TOKEN.matcher(text);
+        int last = 0;
+        while (m.find()) {
+            if (m.start() > last) appendText(target, text.substring(last, m.start()));
+            ObjectNode attrs = target.addObject().put("type", "mention").putObject("attrs");
+            attrs.put("id", m.group(2));
+            attrs.put("text", "@" + m.group(1));
+            last = m.end();
+        }
+        if (last < text.length()) appendText(target, text.substring(last));
+    }
+
+    /** Emit a plain run as text nodes, honouring {@code **bold**}. */
+    private void appendText(ArrayNode target, String text) {
         String[] parts = text.split("\\*\\*", -1);
         for (int i = 0; i < parts.length; i++) {
             if (parts[i].isEmpty()) continue;

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.18] — 2026-07-17
+
+### Added
+- **@-mention users in comments.** Typing `@` followed by a name in the comment
+  box opens an autocomplete of Jira users (instance-wide, keyboard-navigable with
+  ↑/↓/Enter/Esc or click). Picking someone posts a proper Atlassian mention, so
+  Jira sends that person its standard "you were mentioned" notification — just
+  like the Jira editor. Plain `@name` typed without picking stays literal text.
+
+### Fixed
+- **Comment box layout.** The mention wrapper is now a full-width flex row, so the
+  comment textarea spans the box again (it had collapsed on both the issue screen
+  and the Kanban modal).
+- **@-mention autocomplete not registering on the Kanban page.** `detail-edit.js`
+  is loaded in `<head>` there, so `document.body` was still null when it ran; the
+  swap-focus handler now binds to `document` instead, so the script no longer
+  throws at load and the mention module registers.
+
 ## [1.1.17] — 2026-07-16
 
 ### Changed
