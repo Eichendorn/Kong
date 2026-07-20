@@ -43,8 +43,10 @@ public class Routes {
     /** Runs the independent Jira reads of a page concurrently (blocking I/O → virtual threads). */
     private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
 
-    private final Config cfg;
-    private final JiraClient jira;
+    // cfg/jira are swapped out by the first-run setup screen once credentials are
+    // saved, so they're not final; settings never changes.
+    private volatile Config cfg;
+    private volatile JiraClient jira;
     private final Settings settings;
 
     public Routes(Config cfg, JiraClient jira, Settings settings) {
@@ -53,7 +55,32 @@ public class Routes {
         this.settings = settings;
     }
 
+    /** True once Jira credentials are present (setup complete). */
+    private boolean configured() {
+        return cfg.hasJiraCredentials();
+    }
+
+    /** Re-read the config file and rebuild the Jira client (after setup saves). */
+    private synchronized void reloadConfigAndJira() {
+        this.cfg = Config.load();
+        this.jira = cfg.hasJiraCredentials() ? new JiraClient(cfg) : null;
+    }
+
     public void register(Javalin app) {
+        // First-run gate: until Jira credentials are saved, funnel every page to
+        // the setup screen. Static assets (so /setup keeps its styling) and the
+        // setup routes themselves are always allowed through.
+        app.before(ctx -> {
+            if (configured()) return;
+            String p = ctx.path();
+            if (p.equals("/setup") || p.startsWith("/setup") || isStaticAsset(p)) return;
+            ctx.redirect("/setup");
+            ctx.skipRemainingHandlers();
+        });
+
+        app.get("/setup", this::showSetup);
+        app.post("/setup", this::doSetup);
+
         app.get("/", ctx -> {
             List<BoardDef> boards = cfg.boards();
             ctx.redirect(boards.isEmpty() ? "/search" : "/kanban/" + boards.get(0).slug());
@@ -477,6 +504,77 @@ public class Routes {
         model.put("title", "Revision history");
         model.put("changelogHtml", Changelog.html());
         ctx.render("history.html", model);
+    }
+
+    // ---- First-run setup ---------------------------------------------------
+
+    /** Paths the setup gate always lets through, so /setup can load its assets. */
+    private static boolean isStaticAsset(String path) {
+        int dot = path.lastIndexOf('.');
+        if (dot < 0) return false;
+        String ext = path.substring(dot + 1).toLowerCase();
+        return switch (ext) {
+            case "css", "js", "map", "png", "ico", "svg", "jpg", "jpeg",
+                 "gif", "webp", "woff", "woff2", "ttf" -> true;
+            default -> false;
+        };
+    }
+
+    /** The first-run setup form (Jira URL / email / API token). */
+    private void showSetup(Context ctx) {
+        Map<String, Object> model = new HashMap<>();
+        model.put("version", Config.appVersion());
+        model.put("baseUrl", cfg.jiraBaseUrl());
+        model.put("email", configured() ? cfg.jiraEmail() : "");
+        model.put("configured", configured());
+        ctx.render("setup.html", model);
+    }
+
+    /** Verify the entered credentials against Jira, then persist and reload. */
+    private void doSetup(Context ctx) {
+        String baseUrl = ctx.formParam("baseUrl");
+        String email = ctx.formParam("email");
+        String token = ctx.formParam("token");
+        baseUrl = (baseUrl == null || baseUrl.isBlank())
+                ? "https://fnba.atlassian.net" : baseUrl.trim();
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("version", Config.appVersion());
+        model.put("baseUrl", baseUrl);
+        model.put("email", email == null ? "" : email);
+        model.put("configured", configured());
+
+        if (email == null || email.isBlank() || token == null || token.isBlank()) {
+            model.put("error", "Both your Jira email and API token are required.");
+            ctx.status(400).render("setup.html", model);
+            return;
+        }
+
+        // Verify before writing anything: build a throwaway client and hit /myself.
+        String who;
+        try {
+            who = new JiraClient(baseUrl, email.trim(), token.trim()).currentUser().displayName();
+        } catch (JiraClient.JiraException e) {
+            model.put("error", e.statusCode == 401 || e.statusCode == 403
+                    ? "Jira rejected those credentials (check the email and API token)."
+                    : "Couldn't reach Jira at that URL (" + escape(e.getMessage()) + ").");
+            ctx.status(400).render("setup.html", model);
+            return;
+        } catch (Exception e) {
+            model.put("error", "Couldn't verify those details: " + escape(e.getMessage()));
+            ctx.status(400).render("setup.html", model);
+            return;
+        }
+
+        try {
+            Config.writeCredentials(baseUrl, email.trim(), token.trim());
+        } catch (java.io.IOException e) {
+            model.put("error", "Saved-config write failed: " + escape(e.getMessage()));
+            ctx.status(500).render("setup.html", model);
+            return;
+        }
+        reloadConfigAndJira();
+        ctx.redirect("/");
     }
 
     /** The only issue types offered when creating a new task. */

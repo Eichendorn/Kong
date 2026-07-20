@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public final class Settings {
 
-    private static final Path FILE = Path.of("settings.local.json");
+    private static final Path FILE = Config.dataDir().resolve("settings.local.json");
     private static final String WIP_KEY = "wipLimits";
 
     private final ObjectMapper mapper = new ObjectMapper();

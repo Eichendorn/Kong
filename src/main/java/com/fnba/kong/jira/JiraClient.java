@@ -57,8 +57,16 @@ public class JiraClient {
     public static final String COMPLIANCE_FIELD = "customfield_11667";
 
     public JiraClient(Config cfg) {
-        this.baseUrl = cfg.jiraBaseUrl().replaceAll("/+$", "");
-        String creds = cfg.jiraEmail() + ":" + cfg.jiraToken();
+        this(cfg.jiraBaseUrl(), cfg.jiraEmail(), cfg.jiraToken());
+    }
+
+    /**
+     * Build a client straight from credentials — used by the first-run setup
+     * screen to verify an entered email/token pair before persisting it.
+     */
+    public JiraClient(String baseUrl, String email, String token) {
+        this.baseUrl = baseUrl.replaceAll("/+$", "");
+        String creds = email + ":" + token;
         this.authHeader = "Basic " + Base64.getEncoder()
                 .encodeToString(creds.getBytes(StandardCharsets.UTF_8));
     }

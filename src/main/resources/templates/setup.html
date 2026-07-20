@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Kong — Setup</title>
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"/>
+    <link rel="stylesheet" href="/app.css"/>
+</head>
+<body class="setup-body">
+<main class="setup-main">
+    <div class="setup-card">
+        <div class="setup-brand">
+            <img class="setup-mark" src="/kong-mark.png" alt="" aria-hidden="true"/>
+            <div>
+                <h1 class="setup-title">Welcome to Kong</h1>
+                <span class="setup-version" th:text="'v' + ${version}">v?</span>
+            </div>
+        </div>
+
+        <p class="setup-lead" th:if="${!configured}">
+            Kong needs to connect to Jira. Enter your details once and you're set —
+            they're stored only on this computer and used only to talk to Jira.
+        </p>
+        <p class="setup-lead" th:if="${configured}">
+            Update the Jira connection Kong uses. Your existing credentials stay in
+            place unless you save new ones.
+        </p>
+
+        <div class="setup-error" th:if="${error}" th:text="${error}" role="alert">error</div>
+
+        <form class="setup-form" method="post" th:action="@{/setup}" autocomplete="off">
+            <label class="setup-field">
+                <span class="setup-label">Jira site URL</span>
+                <input type="url" name="baseUrl" th:value="${baseUrl}"
+                       placeholder="https://your-org.atlassian.net" required
+                       spellcheck="false"/>
+            </label>
+
+            <label class="setup-field">
+                <span class="setup-label">Your Jira email</span>
+                <input type="email" name="email" th:value="${email}"
+                       placeholder="you@company.com" required spellcheck="false"/>
+            </label>
+
+            <label class="setup-field">
+                <span class="setup-label">API token</span>
+                <input type="password" name="token" placeholder="Paste your API token"
+                       required spellcheck="false" autocomplete="off"/>
+                <span class="setup-hint">
+                    Kong signs in as you using a Jira API token (not your password).
+                    <a href="https://id.atlassian.com/manage-profile/security/api-tokens"
+                       target="_blank" rel="noopener">Create an API token ↗</a>,
+                    then paste it above.
+                </span>
+            </label>
+
+            <button type="submit" class="setup-submit">Connect &amp; continue</button>
+        </form>
+    </div>
+</main>
+</body>
+</html>

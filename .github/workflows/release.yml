@@ -1,0 +1,38 @@
+name: Release
+
+# Build the Windows installer and publish it to a GitHub Release whenever a
+# version tag is pushed. This fires on the exact tags `cpt` already creates
+# (v1.1.22, v1.1.23, …), so cutting a release also produces a downloadable .msi.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # needed to create the Release and upload the asset
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin, includes jpackage)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # windows-latest ships the WiX Toolset (needed by jpackage for .msi) and
+      # Maven, so package.ps1 has everything it needs.
+      - name: Build the MSI installer
+        shell: pwsh
+        run: ./packaging/package.ps1
+
+      - name: Publish the installer to the GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Kong-*.msi
+          generate_release_notes: true
+          fail_on_unmatched_files: true

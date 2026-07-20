@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-07-20
+
+### Added
+- **One-click Windows installer.** Kong can now be packaged as a self-contained
+  `.msi` (via `jpackage`) that bundles its own Java runtime — end users install
+  nothing else, double-click, and get a Start-Menu shortcut. Build with
+  `packaging\package.ps1`; a GitHub Actions workflow (`.github/workflows/release.yml`)
+  builds and attaches the installer to a GitHub Release on every `v*` tag, and
+  `packaging\publish-to-share.ps1` mirrors it to an internal file share. Full
+  end-user and maintainer instructions in `docs/INSTALL.md`.
+- **First-run setup screen.** On first launch (no saved credentials) Kong opens a
+  **Welcome to Kong** page asking for the Jira URL, email, and API token, verifies
+  them against Jira before saving, and never touches a config file by hand. A
+  before-filter funnels any page to `/setup` until setup is complete; `/setup`
+  stays reachable afterward to switch accounts.
+- **Auto-open browser on launch.** The installed app (which has no window of its
+  own) opens the default browser to Kong on startup; relaunching while it's
+  already running just reopens the tab. Suppress with `KONG_NO_BROWSER=1`.
+
+### Changed
+- **Per-user data directory.** Config and settings now live in a writable per-user
+  location (`%APPDATA%\Kong` on Windows) so an installed copy under Program Files
+  works, while a source/dev checkout that already has `config.local.properties` in
+  the working directory keeps using it. Override with `KONG_HOME`.
+
 ## [1.1.22] — 2026-07-20
 
 ### Changed

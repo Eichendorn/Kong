@@ -542,3 +542,36 @@ dl.meta .edit-btn { margin-left: 8px; white-space: nowrap; }
 .comment-date { color: var(--muted); }
 .comment-body { white-space: pre-wrap; }
 .comment-replies { list-style: none; margin: 10px 0 0; padding: 0 0 0 16px; border-left: 2px solid var(--accent); display: flex; flex-direction: column; gap: 10px; }
+
+/* ---- First-run setup screen ------------------------------------------- */
+.setup-body { display: flex; min-height: 100vh; margin: 0; }
+.setup-main { margin: auto; width: 100%; max-width: 520px; padding: 32px 20px; }
+.setup-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 28px 30px 32px; box-shadow: 0 10px 40px rgba(0,0,0,.35);
+}
+.setup-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.setup-mark { width: 52px; height: 52px; display: block; }
+.setup-title { font-family: 'Metal Mania', cursive; font-weight: 400; margin: 0; font-size: 30px; letter-spacing: .5px; }
+.setup-version { color: var(--muted); font-size: 12px; }
+.setup-lead { color: var(--muted); line-height: 1.5; margin: 8px 0 20px; }
+.setup-error {
+    background: var(--red); color: #fff; border-radius: 6px; padding: 10px 12px;
+    margin-bottom: 18px; font-size: 14px; line-height: 1.4;
+}
+.setup-form { display: flex; flex-direction: column; gap: 18px; }
+.setup-field { display: flex; flex-direction: column; gap: 6px; }
+.setup-label { font-size: 13px; font-weight: 600; }
+.setup-field input {
+    background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 12px; font-size: 14px; width: 100%; box-sizing: border-box;
+}
+.setup-field input:focus { outline: none; border-color: var(--accent); }
+.setup-hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.setup-hint a { color: var(--accent); }
+.setup-submit {
+    margin-top: 6px; background: var(--accent); color: #fff; border: none;
+    border-radius: 6px; padding: 12px 16px; font-size: 15px; font-weight: 600;
+    cursor: pointer;
+}
+.setup-submit:hover { filter: brightness(1.08); }

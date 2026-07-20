@@ -7,3 +7,4 @@ config.local.properties
 server.log
 dependency-reduced-pom.xml
 settings.local.json
+dist/

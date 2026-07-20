@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -11,7 +12,7 @@ import java.util.Properties;
 /**
  * Application configuration. Values are resolved in this order:
  *   1. Environment variable (e.g. JIRA_TOKEN)
- *   2. config.local.properties in the working directory (gitignored)
+ *   2. config.local.properties in the data directory (see {@link #dataDir()})
  *   3. built-in default
  *
  * The Jira API token is read here and only ever used server-side by
@@ -19,21 +20,136 @@ import java.util.Properties;
  */
 public final class Config {
 
+    static final String CONFIG_FILE = "config.local.properties";
+
     private final Properties props = new Properties();
 
     private Config() {
-        Path local = Path.of("config.local.properties");
+        Path local = dataDir().resolve(CONFIG_FILE);
         if (Files.isReadable(local)) {
             try (InputStream in = Files.newInputStream(local)) {
                 props.load(in);
             } catch (IOException e) {
-                throw new IllegalStateException("Failed to read config.local.properties", e);
+                throw new IllegalStateException("Failed to read " + local, e);
             }
         }
     }
 
     public static Config load() {
         return new Config();
+    }
+
+    // ---- Data directory ----------------------------------------------------
+
+    private static volatile Path dataDir;
+
+    /**
+     * Where Kong reads/writes its per-user files (config + settings). Resolved
+     * once, in this order:
+     *   1. {@code KONG_HOME} env var, if set — an explicit override.
+     *   2. The working directory, if it already holds a {@code config.local.properties}
+     *      — this keeps a source/dev checkout (and any "portable" unzip-and-run)
+     *      self-contained.
+     *   3. The OS per-user application-data location, so an installed copy under
+     *      Program Files (read-only) still has a writable home:
+     *        Windows  → %APPDATA%\Kong
+     *        macOS    → ~/Library/Application Support/Kong
+     *        other    → $XDG_CONFIG_HOME/kong  (or ~/.config/kong)
+     * The directory is created if it doesn't exist.
+     */
+    public static Path dataDir() {
+        Path d = dataDir;
+        if (d == null) {
+            synchronized (Config.class) {
+                d = dataDir;
+                if (d == null) {
+                    d = resolveDataDir();
+                    try {
+                        Files.createDirectories(d);
+                    } catch (IOException ignored) {
+                        // Fall back to the working directory if the chosen home
+                        // can't be created — better a running app than a crash.
+                        d = Path.of(".").toAbsolutePath().normalize();
+                    }
+                    dataDir = d;
+                }
+            }
+        }
+        return d;
+    }
+
+    private static Path resolveDataDir() {
+        String home = System.getenv("KONG_HOME");
+        if (home != null && !home.isBlank()) return Path.of(home.trim());
+
+        Path cwdConfig = Path.of(CONFIG_FILE);
+        if (Files.isReadable(cwdConfig)) return Path.of(".").toAbsolutePath().normalize();
+
+        String os = System.getProperty("os.name", "").toLowerCase();
+        Path base;
+        if (os.contains("win")) {
+            String appData = System.getenv("APPDATA");
+            base = (appData != null && !appData.isBlank())
+                    ? Path.of(appData)
+                    : Path.of(System.getProperty("user.home"), "AppData", "Roaming");
+        } else if (os.contains("mac")) {
+            base = Path.of(System.getProperty("user.home"), "Library", "Application Support");
+        } else {
+            String xdg = System.getenv("XDG_CONFIG_HOME");
+            base = (xdg != null && !xdg.isBlank())
+                    ? Path.of(xdg)
+                    : Path.of(System.getProperty("user.home"), ".config");
+        }
+        return base.resolve("Kong");
+    }
+
+    /** The config file Kong reads and the setup screen writes. */
+    public static Path configFile() {
+        return dataDir().resolve(CONFIG_FILE);
+    }
+
+    /**
+     * Persist the Jira credentials entered on the first-run setup screen,
+     * preserving any existing board/port settings. Written atomically (temp file
+     * + rename) so a crash mid-write can't leave a half-written config.
+     */
+    public static synchronized void writeCredentials(String baseUrl, String email, String token)
+            throws IOException {
+        Path dir = dataDir();
+        Files.createDirectories(dir);
+        Path file = dir.resolve(CONFIG_FILE);
+
+        Properties existing = new Properties();
+        if (Files.isReadable(file)) {
+            try (InputStream in = Files.newInputStream(file)) {
+                existing.load(in);
+            }
+        }
+        String boards = existing.getProperty("jira.boards",
+                "MIN - Encompass Work|project = MIN ORDER BY updated DESC");
+        String port = existing.getProperty("server.port", "7070");
+
+        String content = ""
+                + "# Kong configuration — written by the first-run setup screen.\n"
+                + "# Delete this file to run setup again.\n"
+                + "jira.baseUrl=" + baseUrl + "\n"
+                + "jira.email=" + email + "\n"
+                + "jira.token=" + token + "\n"
+                + "jira.boards=" + boards + "\n"
+                + "server.port=" + port + "\n";
+
+        Path tmp = Files.createTempFile(dir, "config", ".tmp");
+        try {
+            Files.writeString(tmp, content);
+            try {
+                Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE);
+            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
+            }
+            tmp = null;
+        } finally {
+            if (tmp != null) try { Files.deleteIfExists(tmp); } catch (IOException ignore) { /* best effort */ }
+        }
     }
 
     /**
