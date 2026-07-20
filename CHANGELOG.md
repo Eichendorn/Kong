@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.22] — 2026-07-20
+
+### Changed
+- **Kanban cards abbreviate the `Encompass Investigation` type to `Investigation`.**
+  The card's type badge now reads just **Investigation** for those tasks (styling
+  unchanged); every other issue type still shows its full name. Kanban view only.
+
 ## [1.1.21] — 2026-07-17
 
 ### Changed

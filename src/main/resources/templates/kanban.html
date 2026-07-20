@@ -97,7 +97,8 @@
                                     <span class="kanban-reason-text" th:text="${i.reasonForTrackingDisplay()}">Reason</span>
                                 </div>
                                 <div class="kanban-card-foot">
-                                    <span class="kanban-type" th:text="${i.issueType()}"
+                                    <span class="kanban-type"
+                                          th:text="${i.issueType() == 'Encompass Investigation'} ? 'Investigation' : ${i.issueType()}"
                                           th:classappend="${i.issueType() == 'Encompass Bug'} ? 'type-bug' : (${i.issueType() == 'Refactor'} ? 'type-refactor' : (${i.issueType() == 'Encompass Investigation'} ? 'type-investigation' : ''))">Type</span>
                                     <span class="kanban-assignee" th:text="${i.assignee()}"
                                           th:classappend="${i.assignee() == 'Unassigned'} ? 'unassigned' : ''">Assignee</span>
