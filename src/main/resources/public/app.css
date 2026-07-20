@@ -410,6 +410,8 @@ td.chk .badge { padding: 1px 6px; }
 .status.sc-done { background: #1f3a2a; color: #8ce0a8; }
 /* Ready to Release: flag the card's status pill red, consistent with --red. */
 .status.status-rtr { background: #3a1f1f; color: #ff9b9b; }
+/* Investigate column heading: yellow pill to flag it on the board. */
+.status.status-inv { background: #3a361f; color: #f5d76e; }
 
 .badge { padding: 2px 9px; border-radius: 10px; font-size: 12px; }
 .badge-yes { background: #1f3a2a; color: #8ce0a8; }

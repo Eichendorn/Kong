@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] — 2026-07-20
+
+### Changed
+- **Investigate column heading is now yellow.** On the Kanban board the
+  **Investigate** column's status pill renders in yellow (amber background, light
+  yellow text) to flag it at a glance, consistent with how "Ready to Release" is
+  flagged red. Other columns are unchanged.
+
 ## [1.2.0] — 2026-07-20
 
 ### Added

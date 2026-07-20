@@ -31,7 +31,7 @@
         <section class="kanban-col" th:each="c : ${columns}"
                  th:classappend="${c.overWip()} ? 'over-wip' : ''">
             <header class="kanban-col-head">
-                <span class="status" th:classappend="'sc-' + ${c.statusCategory()}"
+                <span class="status" th:classappend="'sc-' + ${c.statusCategory()} + (${c.status() == 'Investigate'} ? ' status-inv' : '')"
                       th:text="${c.status()}">Status</span>
                 <span class="kanban-count" th:classappend="${c.overWip()} ? 'over' : ''"
                       th:title="${c.wipLimit() > 0} ? 'Cards / WIP limit' : 'Cards (no WIP limit)'">
