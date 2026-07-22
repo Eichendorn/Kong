@@ -89,6 +89,7 @@ public class Routes {
         app.get("/board/{slug}", this::board);
         app.get("/kanban/{slug}", this::kanban);
         app.get("/specify-done/{slug}", this::specifyDone);
+        app.get("/done/{slug}", this::done);
         app.get("/attachment/{id}", this::attachment);
         app.get("/me/avatar", this::currentAvatar);
         app.get("/search", this::search);
@@ -184,6 +185,62 @@ public class Routes {
         String base = ORDER_BY_CLAUSE.matcher(boardJql).replaceAll("");
         base = STATUS_CLAUSE.matcher(base).replaceAll("").trim();
         return base + " AND status = \"Specify Done\" ORDER BY updated DESC";
+    }
+
+    /**
+     * The Done screen for a board: the board's project/issue-type filter with the
+     * status pinned to "Done", most-recently-completed first. The data source for
+     * throughput/cycle-time stats, and a click-through to any finished card.
+     */
+    private void done(Context ctx) {
+        String slug = ctx.pathParam("slug");
+        BoardDef board = cfg.boards().stream()
+                .filter(b -> b.slug().equals(slug))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Unknown board: " + slug));
+        Map<String, Object> model = baseModel(slug);
+        model.put("title", "Done");
+        // Date range (on resolution date). Only well-formed yyyy-MM-dd values are
+        // used; anything else is ignored so a stray query param can't break the JQL.
+        String from = cleanDate(ctx.queryParam("from"));
+        String to = cleanDate(ctx.queryParam("to"));
+        model.put("fromDate", from);
+        model.put("toDate", to);
+        String jql = doneJql(board.jql(), from, to);
+        model.put("jql", jql);
+        JiraClient.SearchResult res = jiraReady()
+                ? jira.search(jql, MAX_RESULTS) : new JiraClient.SearchResult(List.of(), false);
+        model.put("issues", res.issues());   // already resolved-date DESC from JQL
+        model.put("truncated", res.truncated());
+        model.put("resultCap", MAX_RESULTS);
+        model.put("showDoneNav", false);   // this IS the Done screen
+        ctx.render("done.html", model);
+    }
+
+    private static final Pattern ISO_DATE = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
+
+    /** Return the value only if it is a well-formed yyyy-MM-dd date, else null. */
+    private static String cleanDate(String s) {
+        if (s == null) return null;
+        s = s.trim();
+        return ISO_DATE.matcher(s).matches() ? s : null;
+    }
+
+    /**
+     * Rewrite a board's JQL to select only its completed items: drop any existing
+     * status predicate and ORDER BY, pin the status to "Done", constrain by the
+     * resolution-date range (inclusive), and sort by resolution date
+     * (most-recently-completed first). {@code from}/{@code to} are yyyy-MM-dd or null.
+     */
+    static String doneJql(String boardJql, String from, String to) {
+        String base = ORDER_BY_CLAUSE.matcher(boardJql).replaceAll("");
+        base = STATUS_CLAUSE.matcher(base).replaceAll("").trim();
+        StringBuilder sb = new StringBuilder(base).append(" AND status = \"Done\"");
+        if (from != null) sb.append(" AND resolved >= \"").append(from).append("\"");
+        // Include the whole end day (Jira treats a bare date as 00:00).
+        if (to != null) sb.append(" AND resolved <= \"").append(to).append(" 23:59\"");
+        sb.append(" ORDER BY resolved DESC");
+        return sb.toString();
     }
 
     /** A Kanban column: label, colour category, WIP limit, and status sub-groups. */
@@ -1115,6 +1172,7 @@ public class Routes {
         model.put("showKanbanNav", haveBoard);
         model.put("showListNav", haveBoard);
         model.put("showSpecifyDoneNav", haveBoard);
+        model.put("showDoneNav", haveBoard);
         model.put("jiraReady", jiraReady());
         model.put("jiraBaseUrl", jiraBrowseBase());
         model.put("version", Config.appVersion());

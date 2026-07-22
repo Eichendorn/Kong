@@ -202,6 +202,13 @@ h1 { font-size: 20px; margin: 0 0 4px; color: var(--orange); }
 /* Board controls: title on the left, Create Task pushed to the right. */
 .board-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .board-controls h1 { margin: 0; }
+.done-count { color: var(--muted); font-size: 13px; }
+.done-range { display: flex; align-items: center; gap: 8px; }
+.done-range label { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); }
+.done-range input[type=date] { background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; }
+.done-range input[type=date]:focus { outline: none; border-color: var(--accent); }
+.done-range-clear { font-size: 13px; color: var(--muted); }
 .create-task-btn { margin-left: auto; background: var(--accent); color: #fff;
     border: 1px solid var(--accent); border-radius: 6px; padding: 6px 14px; font-weight: 600; }
 .create-task-btn:hover { filter: brightness(1.1); text-decoration: none; }

@@ -44,6 +44,8 @@ public record Issue(
         Instant statusSince,
         Instant categorySince,
         Instant boardSince,
+        Instant createdAt,
+        Instant resolutionDate,
         boolean checklistsComplete,
         JsonNode raw
 ) {
@@ -89,6 +91,7 @@ public record Issue(
         // Default board-since to created; the Kanban overlays the actual
         // Encompass On Deck entry date (which needs the changelog).
         Instant boardSince = createdAt;
+        Instant resolvedAt = parseInstant(f.path("resolutiondate").asText(""));
         return new Issue(
                 node.path("key").asText(""),
                 f.path("summary").asText(""),
@@ -119,6 +122,8 @@ public record Issue(
                 statusEntry(node),
                 categorySince,
                 boardSince,
+                createdAt,
+                resolvedAt,
                 complete,
                 node
         );
@@ -180,7 +185,7 @@ public record Issue(
                 devTester, devTesterUsers, reporter, releaseAuthorizedBy, releaseManager, priority, storyPoints, devChecklists,
                 reasonForTracking, demoScheduledDate, specAuthor, specAuthorUsers, specApprover, labels, specDetail, descriptionText,
                 descriptionHtml, specDetailHtml, updated, statusSince, categorySince,
-                boardSince, checklistsComplete, raw);
+                boardSince, createdAt, resolutionDate, checklistsComplete, raw);
     }
 
     private static long daysSince(Instant t) {
@@ -199,6 +204,26 @@ public record Issue(
     public String daysInStatusDisplay() { return dayDisplay(daysInStatus()); }
     public String daysInColumnDisplay() { return dayDisplay(daysInColumn()); }
     public String daysOnBoardDisplay() { return dayDisplay(daysOnBoard()); }
+
+    private static final DateTimeFormatter DAY_FMT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(java.time.ZoneId.systemDefault());
+
+    /** Resolution date as yyyy-MM-dd (local), or an em dash if the issue is unresolved. */
+    public String resolutionDateDisplay() {
+        return resolutionDate == null ? "—" : DAY_FMT.format(resolutionDate);
+    }
+
+    /**
+     * Lead time in whole days: created → resolved. A decision-neutral "days to
+     * Done" that needs no changelog. -1 (shown as em dash) when either end is
+     * unknown.
+     */
+    public long leadTimeDays() {
+        if (createdAt == null || resolutionDate == null) return -1;
+        return Duration.between(createdAt, resolutionDate).toDays();
+    }
+
+    public String leadTimeDisplay() { return dayDisplay(leadTimeDays()); }
 
     /**
      * When the issue last entered its CURRENT status: the most recent "status"

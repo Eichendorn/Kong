@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="'Kong — ' + ${title}">Kong</title>
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"/>
+    <link rel="stylesheet" href="/app.css"/>
+    <script src="/htmx.min.js"></script>
+</head>
+<body class="board-page">
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content">
+    <div th:if="${!jiraReady}" class="banner">
+        No Jira credentials configured. Copy <code>config.local.properties.example</code> to
+        <code>config.local.properties</code> and add your API token, then restart.
+    </div>
+
+    <div th:if="${truncated}" class="banner">
+        Showing the first <span th:text="${resultCap}">500</span> completed items — this board has
+        more than that, so older ones are hidden.
+    </div>
+
+    <div class="board-controls">
+        <h1 th:text="${title}">Done</h1>
+        <form class="done-range" method="get" th:action="@{'/done/' + ${activeSlug}}">
+            <label>From
+                <input type="date" name="from" th:value="${fromDate}"/>
+            </label>
+            <label>To
+                <input type="date" name="to" th:value="${toDate}"/>
+            </label>
+            <button type="submit">Apply</button>
+            <a th:if="${fromDate != null or toDate != null}"
+               class="done-range-clear" th:href="@{'/done/' + ${activeSlug}}">Clear</a>
+        </form>
+        <span class="done-count" th:if="${!issues.isEmpty()}"
+              th:text="${issues.size()} + ' completed'">0 completed</span>
+    </div>
+
+    <div class="issues-scroll" th:if="${!issues.isEmpty()}">
+    <table class="issues">
+        <thead>
+        <tr>
+            <th>Key</th><th>Summary</th><th>Type</th><th>Resolution</th>
+            <th title="Date the issue was resolved">Resolved</th>
+            <th title="Whole days from created to resolved">Days to Done</th>
+            <th>Assignee</th><th>Reporter</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="i : ${issues}">
+            <td><a th:href="@{'/issue/' + ${i.key()}(board=${activeSlug})}" th:text="${i.key()}">KEY-1</a></td>
+            <td class="summary" th:text="${i.summary()}">summary</td>
+            <td th:text="${i.issueType()}">Task</td>
+            <td>
+                <span class="status sc-done" th:text="${i.resolution() != null and !i.resolution().isEmpty()} ? ${i.resolution()} : 'Done'">Done</span>
+            </td>
+            <td class="resolved" th:text="${i.resolutionDateDisplay()}">2026-01-01</td>
+            <td class="days-in" th:text="${i.leadTimeDisplay()}">0</td>
+            <td th:text="${i.assignee()}">Assignee</td>
+            <td th:text="${i.reporter()}">Reporter</td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <p th:if="${issues.isEmpty()}" class="empty">No completed issues.</p>
+</main>
+</body>
+</html>

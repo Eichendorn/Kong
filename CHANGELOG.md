@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-07-22
+
+### Added
+- **Done screen.** A new **Done** view per board (`/done/{slug}`, reachable from
+  the top-bar "Done" button) lists completed tasks most-recently-resolved first,
+  showing resolution date and **Days to Done** (created → resolved). This is the
+  first step toward Kanban flow statistics and the data source for upcoming
+  throughput/cycle-time metrics. Design notes in `docs/FLOW-STATS.md`.
+- **Date-range filter on the Done screen.** From/To date pickers constrain the
+  list by resolution date (end-day inclusive), with a Clear link to reset.
+
 ## [1.2.1] — 2026-07-20
 
 ### Changed

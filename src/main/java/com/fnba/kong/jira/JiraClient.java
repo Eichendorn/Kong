@@ -133,7 +133,7 @@ public class JiraClient {
         // over a 500-issue board). The list's "Days in status" uses the cheap
         // statuscategorychangedate; the Kanban fetches exact per-status timing for
         // its (far fewer) active cards via statusSinceByKeys.
-        String fields = "summary,status,issuetype,priority,assignee,reporter,updated,created,statuscategorychangedate,"
+        String fields = "summary,status,issuetype,priority,assignee,reporter,updated,created,resolutiondate,statuscategorychangedate,"
                 + Issue.DEV_CHECKLISTS_FIELD + "," + Issue.SMART_CHECKLIST_FIELD
                 + "," + Issue.DEV_TESTER_FIELD + "," + Issue.REASON_FOR_TRACKING_FIELD
                 + "," + Issue.DEMO_SCHEDULED_DATE_FIELD + "," + Issue.RELEASE_MANAGER_FIELD
