@@ -884,20 +884,24 @@ public class Routes {
             throw e;
         }
         BoardDef board = resolveBoard(ctx, key);
-        // When the user came from the AOC/DC screen (list=aoc-dc), back the sidebar
-        // with the AOC/DC backlog instead of the board's WIP list.
-        boolean aocDcList = "aoc-dc".equals(ctx.queryParam("list"));
+        // The sidebar list mirrors the screen the user came from (the ?list= param):
+        // the AOC/DC backlog, a board's Specify Done queue, or (default) its WIP list.
+        String list = ctx.queryParam("list");
+        boolean aocDcList = "aoc-dc".equals(list);
+        boolean specifyDoneList = "specify-done".equals(list);
         Map<String, Object> model = baseModel(board == null ? "" : board.slug());
         model.put("title", key);
         model.put("aocDcList", aocDcList);
+        model.put("specifyDoneList", specifyDoneList);
         // Fire the remaining independent Jira reads concurrently, then join.
         var transF = async(() -> jira.transitions(key));
         var commsF = async(() -> jira.comments(key));
-        var sidebarF = async(() -> aocDcList
-                ? aocDcBacklog()
-                : (board != null && jiraReady()
-                        ? sortByStatus(jira.searchBrief(board.jql(), MAX_RESULTS))
-                        : List.<Issue>of()));
+        var sidebarF = async(() -> {
+            if (aocDcList) return aocDcBacklog();
+            if (!jiraReady() || board == null) return List.<Issue>of();
+            String sidebarJql = specifyDoneList ? specifyDoneJql(board.jql()) : board.jql();
+            return sortByStatus(jira.searchBrief(sidebarJql, MAX_RESULTS));
+        });
         List<Comment> comments = join(commsF);
         model.put("issue", issue);
         model.put("transitions", join(transF));

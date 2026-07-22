@@ -14,13 +14,13 @@
 <main class="content issue-layout">
     <aside class="issue-sidebar">
         <nav class="sidebar-nav">
-            <a th:href="${aocDcList} ? @{/aoc-dc} : @{'/board/' + ${activeSlug}}"
-               th:text="${aocDcList} ? '← AOC/DC' : '← List'">← List</a>
+            <a th:href="${aocDcList} ? @{/aoc-dc} : (${specifyDoneList} ? @{'/specify-done/' + ${activeSlug}} : @{'/board/' + ${activeSlug}})"
+               th:text="${aocDcList} ? '← AOC/DC' : (${specifyDoneList} ? '← Specify Done' : '← List')">← List</a>
         </nav>
         <ul class="mini-list">
             <li th:each="i : ${sidebarIssues}"
                 th:class="${i.key() == issue.key()} ? 'selected' : ''">
-                <a th:href="${aocDcList} ? @{'/issue/' + ${i.key()}(list='aoc-dc')} : @{'/issue/' + ${i.key()}(board=${activeSlug})}">
+                <a th:href="${aocDcList} ? @{'/issue/' + ${i.key()}(list='aoc-dc')} : (${specifyDoneList} ? @{'/issue/' + ${i.key()}(board=${activeSlug},list='specify-done')} : @{'/issue/' + ${i.key()}(board=${activeSlug})})">
                     <span class="mini-top">
                         <span class="mini-key" th:text="${i.key()}">KEY-1</span>
                         <span class="mini-status status" th:classappend="'sc-' + ${i.statusCategory()}"

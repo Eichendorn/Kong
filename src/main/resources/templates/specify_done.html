@@ -39,7 +39,7 @@
         </thead>
         <tbody>
         <tr th:each="i : ${issues}">
-            <td><a th:href="@{'/issue/' + ${i.key()}(board=${activeSlug})}" th:text="${i.key()}">KEY-1</a></td>
+            <td><a th:href="@{'/issue/' + ${i.key()}(board=${activeSlug},list='specify-done')}" th:text="${i.key()}">KEY-1</a></td>
             <td class="summary" th:text="${i.summary()}">summary</td>
             <td th:text="${i.issueType()}">Task</td>
             <td th:text="${i.priority()}">Priority</td>

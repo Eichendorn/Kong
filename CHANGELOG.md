@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] — 2026-07-22
+
+### Changed
+- **Specify Done sidebar.** Opening a task from the Specify Done screen now keeps
+  the Specify Done queue in the detail-view sidebar (with a "← Specify Done" back
+  link) instead of the board's WIP list — matching the AOC/DC screen's behaviour.
+
 ## [1.4.0] — 2026-07-22
 
 ### Added
