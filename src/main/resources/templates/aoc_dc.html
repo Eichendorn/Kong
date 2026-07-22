@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="'Kong — ' + ${title}">Kong</title>
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64"/>
+    <link rel="stylesheet" href="/app.css"/>
+    <script src="/htmx.min.js"></script>
+</head>
+<body class="board-page">
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<main class="content">
+    <div th:if="${!jiraReady}" class="banner">
+        No Jira credentials configured. Copy <code>config.local.properties.example</code> to
+        <code>config.local.properties</code> and add your API token, then restart.
+    </div>
+
+    <div th:if="${truncated}" class="banner">
+        Showing the first <span th:text="${resultCap}">500</span> matches — narrow the query
+        to see the rest.
+    </div>
+
+    <div class="board-controls">
+        <h1 th:text="${title}">AOC/DC Backlog</h1>
+        <span class="done-count" th:if="${!issues.isEmpty()}"
+              th:text="${issues.size()} + ' in backlog'">0 in backlog</span>
+    </div>
+
+    <div class="issues-scroll" th:if="${!issues.isEmpty()}">
+    <table class="issues">
+        <thead>
+        <tr>
+            <th>Epic</th><th>Key</th><th>Summary</th><th>Type</th><th>Status</th>
+            <th>Reporter</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="i : ${issues}">
+            <td class="epic" th:text="${i.epicDisplay()}">AOC/DC</td>
+            <td><a th:href="@{'/issue/' + ${i.key()}(list='aoc-dc')}" th:text="${i.key()}">KEY-1</a></td>
+            <td class="summary" th:text="${i.summary()}">summary</td>
+            <td th:text="${i.issueType()}">Task</td>
+            <td>
+                <span class="status" th:classappend="'sc-' + ${i.statusCategory()}"
+                      th:text="${i.status()}">Status</span>
+            </td>
+            <td th:text="${i.reporter()}">Reporter</td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <p th:if="${issues.isEmpty()}" class="empty">No backlog tasks in the AOC/DC epics.</p>
+</main>
+</body>
+</html>

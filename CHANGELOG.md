@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-07-22
+
+### Added
+- **AOC/DC backlog screen.** A new top-bar **AOC/DC** view (`/aoc-dc`) lists every
+  Backlog task under the AOC/DC (MIN-2197) and AOC/DC-8 (MIN-2213) epics, ordered
+  by epic then task key, with an Epic column. Opening a task from this screen
+  keeps the AOC/DC list in the detail-view sidebar (with a "← AOC/DC" back link)
+  instead of the board's WIP list.
+
 ## [1.3.1] — 2026-07-22
 
 ### Changed

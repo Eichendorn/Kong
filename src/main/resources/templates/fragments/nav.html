@@ -22,6 +22,8 @@
        th:href="@{'/specify-done/' + ${navSlug}}">Specify Done</a>
     <a th:if="${showDoneNav}" class="view-toggle nav-done"
        th:href="@{'/done/' + ${navSlug}}">Done</a>
+    <a th:if="${showAocDcNav}" class="view-toggle nav-aoc-dc"
+       th:href="@{/aoc-dc}">AOC/DC</a>
     <select th:if="${showPersonFilter}" class="person-select" aria-label="Filter by person"
             th:classappend="${selectedPerson != null and !selectedPerson.isEmpty()} ? 'filtered' : ''"
             onchange="window.location.href = this.value;">

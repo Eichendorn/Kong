@@ -46,6 +46,8 @@ public record Issue(
         Instant boardSince,
         Instant createdAt,
         Instant resolutionDate,
+        String parentKey,
+        String parentSummary,
         boolean checklistsComplete,
         JsonNode raw
 ) {
@@ -124,6 +126,8 @@ public record Issue(
                 boardSince,
                 createdAt,
                 resolvedAt,
+                f.path("parent").path("key").asText(""),
+                f.path("parent").path("fields").path("summary").asText(""),
                 complete,
                 node
         );
@@ -185,7 +189,7 @@ public record Issue(
                 devTester, devTesterUsers, reporter, releaseAuthorizedBy, releaseManager, priority, storyPoints, devChecklists,
                 reasonForTracking, demoScheduledDate, specAuthor, specAuthorUsers, specApprover, labels, specDetail, descriptionText,
                 descriptionHtml, specDetailHtml, updated, statusSince, categorySince,
-                boardSince, createdAt, resolutionDate, checklistsComplete, raw);
+                boardSince, createdAt, resolutionDate, parentKey, parentSummary, checklistsComplete, raw);
     }
 
     private static long daysSince(Instant t) {
@@ -224,6 +228,13 @@ public record Issue(
     }
 
     public String leadTimeDisplay() { return dayDisplay(leadTimeDays()); }
+
+    /** The parent epic's name (falling back to its key), or an em dash if none. */
+    public String epicDisplay() {
+        if (parentSummary != null && !parentSummary.isEmpty()) return parentSummary;
+        if (parentKey != null && !parentKey.isEmpty()) return parentKey;
+        return "—";
+    }
 
     /**
      * When the issue last entered its CURRENT status: the most recent "status"

@@ -91,6 +91,7 @@ public class Routes {
         app.get("/kanban/{slug}", this::kanban);
         app.get("/specify-done/{slug}", this::specifyDone);
         app.get("/done/{slug}", this::done);
+        app.get("/aoc-dc", this::aocDc);
         app.get("/attachment/{id}", this::attachment);
         app.get("/me/avatar", this::currentAvatar);
         app.get("/search", this::search);
@@ -253,6 +254,66 @@ public class Routes {
         if (to != null) sb.append(" AND resolved <= \"").append(to).append(" 23:59\"");
         sb.append(" ORDER BY resolved DESC");
         return sb.toString();
+    }
+
+    /**
+     * The two epics whose backlog the AOC/DC screen lists: AOC/DC (MIN-2197) and
+     * AOC/DC-8 (MIN-2213), both in project MIN. Keys (not names) so a rename in
+     * Jira doesn't break the screen.
+     */
+    private static final List<String> AOC_DC_EPICS = List.of("MIN-2197", "MIN-2213");
+
+    /**
+     * The AOC/DC backlog screen: every task in the Backlog under the AOC/DC and
+     * AOC/DC-8 epics, ordered by epic then task key.
+     */
+    private void aocDc(Context ctx) {
+        Map<String, Object> model = baseModel(null);
+        model.put("title", "AOC/DC Backlog");
+        model.put("showAocDcNav", false);   // this IS the AOC/DC screen
+        String jql = aocDcJql();
+        model.put("jql", jql);
+        JiraClient.SearchResult res = jiraReady()
+                ? jira.search(jql, MAX_RESULTS) : new JiraClient.SearchResult(List.of(), false);
+        model.put("issues", sortByEpicThenKey(res.issues()));
+        model.put("truncated", res.truncated());
+        model.put("resultCap", MAX_RESULTS);
+        ctx.render("aoc_dc.html", model);
+    }
+
+    /** JQL for the AOC/DC backlog: Backlog tasks under the two AOC/DC epics. */
+    private static String aocDcJql() {
+        return "parent in (" + String.join(",", AOC_DC_EPICS)
+                + ") AND status = \"Backlog\" ORDER BY key";
+    }
+
+    /** The AOC/DC backlog, ordered as the screen shows it (epic, then task key). */
+    private List<Issue> aocDcBacklog() {
+        if (!jiraReady()) return List.of();
+        return sortByEpicThenKey(jira.search(aocDcJql(), MAX_RESULTS).issues());
+    }
+
+    /**
+     * Order by epic (parent key), then task key — both numerically so MIN-2199
+     * sorts before MIN-2214 regardless of string length.
+     */
+    private static List<Issue> sortByEpicThenKey(List<Issue> issues) {
+        return issues.stream()
+                .sorted(Comparator.comparingInt((Issue i) -> keyNum(i.parentKey()))
+                        .thenComparingInt(i -> keyNum(i.key())))
+                .toList();
+    }
+
+    /** Numeric suffix of a Jira key like {@code MIN-2197} → 2197; -1 if none. */
+    private static int keyNum(String key) {
+        if (key == null) return -1;
+        int dash = key.lastIndexOf('-');
+        if (dash < 0) return -1;
+        try {
+            return Integer.parseInt(key.substring(dash + 1));
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     /** A Kanban column: label, colour category, WIP limit, and status sub-groups. */
@@ -823,14 +884,20 @@ public class Routes {
             throw e;
         }
         BoardDef board = resolveBoard(ctx, key);
+        // When the user came from the AOC/DC screen (list=aoc-dc), back the sidebar
+        // with the AOC/DC backlog instead of the board's WIP list.
+        boolean aocDcList = "aoc-dc".equals(ctx.queryParam("list"));
         Map<String, Object> model = baseModel(board == null ? "" : board.slug());
         model.put("title", key);
+        model.put("aocDcList", aocDcList);
         // Fire the remaining independent Jira reads concurrently, then join.
         var transF = async(() -> jira.transitions(key));
         var commsF = async(() -> jira.comments(key));
-        var sidebarF = async(() -> (board != null && jiraReady())
-                ? sortByStatus(jira.searchBrief(board.jql(), MAX_RESULTS))
-                : List.<Issue>of());
+        var sidebarF = async(() -> aocDcList
+                ? aocDcBacklog()
+                : (board != null && jiraReady()
+                        ? sortByStatus(jira.searchBrief(board.jql(), MAX_RESULTS))
+                        : List.<Issue>of()));
         List<Comment> comments = join(commsF);
         model.put("issue", issue);
         model.put("transitions", join(transF));
@@ -1185,6 +1252,7 @@ public class Routes {
         model.put("showListNav", haveBoard);
         model.put("showSpecifyDoneNav", haveBoard);
         model.put("showDoneNav", haveBoard);
+        model.put("showAocDcNav", true);   // global screen, not board-scoped
         model.put("jiraReady", jiraReady());
         model.put("jiraBaseUrl", jiraBrowseBase());
         model.put("version", Config.appVersion());
