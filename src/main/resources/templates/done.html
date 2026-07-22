@@ -33,7 +33,7 @@
             </label>
             <button type="submit">Apply</button>
             <a th:if="${fromDate != null or toDate != null}"
-               class="done-range-clear" th:href="@{'/done/' + ${activeSlug}}">Clear</a>
+               class="done-range-clear" th:href="@{'/done/' + ${activeSlug}(from='',to='')}">All time</a>
         </form>
         <span class="done-count" th:if="${!issues.isEmpty()}"
               th:text="${issues.size()} + ' completed'">0 completed</span>

@@ -17,6 +17,7 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -200,10 +201,21 @@ public class Routes {
                 .orElseThrow(() -> new IllegalStateException("Unknown board: " + slug));
         Map<String, Object> model = baseModel(slug);
         model.put("title", "Done");
-        // Date range (on resolution date). Only well-formed yyyy-MM-dd values are
-        // used; anything else is ignored so a stray query param can't break the JQL.
-        String from = cleanDate(ctx.queryParam("from"));
-        String to = cleanDate(ctx.queryParam("to"));
+        // Date range (on resolution date). A fresh visit (neither param present in
+        // the URL) defaults to the current month; submitting the form with the boxes
+        // cleared sends empty params, which means "all time" (no bounds). Only
+        // well-formed yyyy-MM-dd values are used, so a stray param can't break the JQL.
+        String fromRaw = ctx.queryParam("from");
+        String toRaw = ctx.queryParam("to");
+        String from, to;
+        if (fromRaw == null && toRaw == null) {
+            LocalDate today = LocalDate.now();
+            from = today.withDayOfMonth(1).toString();
+            to = today.toString();
+        } else {
+            from = cleanDate(fromRaw);
+            to = cleanDate(toRaw);
+        }
         model.put("fromDate", from);
         model.put("toDate", to);
         String jql = doneJql(board.jql(), from, to);

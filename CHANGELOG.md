@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] — 2026-07-22
+
+### Changed
+- **Done screen defaults to the current month.** Opening the Done view now shows
+  tasks resolved this month rather than the full history; the date pickers are
+  pre-filled to the 1st through today. The "All time" link removes the bounds.
+
 ## [1.3.0] — 2026-07-22
 
 ### Added
